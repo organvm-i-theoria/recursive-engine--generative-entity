@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rege"
+version = "1.0.0"
+description = "RE:GE - Recursive Engine: Generative Entity - A symbolic operating system for myth, identity, ritual, and recursive systems"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "RE:GE System"}
+]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Artistic Software",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["symbolic", "myth", "ritual", "recursive", "generative"]
+
+dependencies = [
+    "click>=8.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.scripts]
+rege = "rege.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/re-ge/recursive-engine"
+Documentation = "https://github.com/re-ge/recursive-engine#readme"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rege*"]
+
+[tool.pytest.ini_options]
+testpaths = ["rege/tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["rege"]
+omit = ["rege/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
