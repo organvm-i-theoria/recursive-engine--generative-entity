@@ -4,16 +4,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**RE:GE** (Recursive Engine: Generative Entity) is a symbolic operating system specification - a mythic-academic framework expressed through interconnected Markdown documentation. It is not executable software but a conceptual architecture for myth, identity, ritual, and recursive systems.
+**RE:GE** (Recursive Engine: Generative Entity) is a symbolic operating system for myth, identity, ritual, and recursive systems. It consists of:
 
-## Architecture
+1. **Specification Documentation** (`docs/`) - Mythic-academic framework expressed through interconnected Markdown
+2. **Python Implementation** (`rege/`) - Fully functional executable system
 
-### Core System Files
+## Repository Structure
+
+```
+recursive-engine--generative-entity/
+├── rege/                    # Python implementation
+│   ├── core/                # Constants, models, exceptions
+│   ├── parser/              # Invocation syntax parser
+│   ├── routing/             # Soul Patchbay queue system
+│   ├── organs/              # 10 organ handlers
+│   ├── protocols/           # FUSE01, recovery, enforcement
+│   ├── persistence/         # JSON archive system
+│   └── tests/               # Test suite
+├── docs/                    # Specification documentation
+│   ├── core/                # Core system docs (4NTHOLOGY, constants, linkmap)
+│   ├── organs/              # Organ specifications (01-22)
+│   ├── protocols/           # Protocol specifications (FUSE01, recovery)
+│   ├── interfaces/          # OS interface docs (ritual access, bridges)
+│   ├── academic-wing/       # Academic expansion chambers (08-12)
+│   └── archive/             # Historical/symbolic fragments
+├── README.md                # Project overview and usage
+├── CLAUDE.md                # This file
+├── CONTRIBUTING.md          # Contribution guidelines
+├── LICENSE                  # MIT License
+└── pyproject.toml           # Package configuration
+```
+
+## Documentation Architecture
+
+### Core System Files (`docs/core/`)
 - `RE-GE_4NTHOLOGY_INIT.v1.0.md` - Main comprehensive system documentation
-- `RE-GE_ORG_BODY_00_ACADEMIA_WING_PROTOCOL.md` - Foundational academic layer (AAW)
 - `RE-GE_RECURSIVE_SYSTEM_RENDER_LINKMAP.md` - Inter-organ routing and connections
+- `RE-GE_CONSTANTS_CHARGE_THRESHOLDS.md` - 5-tier charge system
 
-### Organizational Bodies (ORG_BODY_01-22)
+### Organizational Bodies (`docs/organs/`)
 22 thematically-named modules functioning like organs of a symbolic body:
 - **01 Heart of Canon** - Core mythology and canon events
 - **02 Mirror Cabinet** - Reflection and interpretation
@@ -28,21 +57,52 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **11 Mask Engine** - Identity layers and persona assembly
 - **12-22** - Commerce, Blockchain, Monetizer, Audience, Place, Time, Analog-Digital, Process-Product, Consumption, Stagecraft, Publishing
 
-### Academic Core (AAW_CORE files)
-5 expansion chambers for the Academia Wing:
-- **08 Canonization Engine** - How objects enter personal canon
-- **09 Interlocutor Protocols** - Dialogue with ghosts, masks, symbolic beings
-- **10 Genealogy Engine** - Symbolic lineage and influence mapping
-- **11 Failure Study Chamber** - Ritual study of collapse and abandonment
-- **12 Mythical Citation System** - Recursive attribution and echo tracking
+### Academic Wing (`docs/academic-wing/`)
+- `RE-GE_ORG_BODY_00_ACADEMIA_WING_PROTOCOL.md` - Foundational academic layer
+- `RE-GE_AAW_CORE_08_CANONIZATION_ENGINE.md` - How objects enter personal canon
+- `RE-GE_AAW_CORE_09_INTERLOCUTOR_PROTOCOLS.md` - Dialogue with ghosts, masks, symbolic beings
+- `RE-GE_AAW_CORE_10_GENEALOGY_ENGINE.md` - Symbolic lineage and influence mapping
+- `RE-GE_AAW_CORE_11_FAILURE_STUDY_CHAMBER.md` - Ritual study of collapse and abandonment
+- `RE-GE_AAW_CORE_12_MYTHICAL_CITATION_SYSTEM.md` - Recursive attribution and echo tracking
 
-### OS Interface
-- `RE-GE_OS_INTERFACE_01_RITUAL_ACCESS_CO.md` - Invocation syntax for calling organs
+### Protocols (`docs/protocols/`)
+- `RE-GE_PROTOCOL_FUSE01.md` - Fragment fusion protocol
+- `RE-GE_PROTOCOL_SYSTEM_RECOVERY.md` - System recovery protocol
+- `RE-GE_PROTOCOL_COLLABORATOR.md` - Collaboration protocol
+
+### Interfaces (`docs/interfaces/`)
+- `RE-GE_OS_INTERFACE_01_RITUAL_ACCESS_CONTROLLER.md` - Invocation syntax for calling organs
+- `RE-GE_OS_INTERFACE_02_EXTERNAL_BRIDGES.md` - Obsidian, Git, Max/MSP integration
+
+## Python Implementation
+
+### Key Modules (`rege/`)
+
+| Module | Purpose |
+|--------|---------|
+| `core/constants.py` | Charge tiers, priorities, depth limits |
+| `core/models.py` | Fragment, Patch, Invocation data classes |
+| `parser/invocation_parser.py` | Ritual syntax parser |
+| `routing/patchbay.py` | Priority queue system |
+| `organs/*.py` | 10 organ handlers |
+| `protocols/fuse01.py` | Fusion protocol |
+| `cli.py` | Command-line interface |
+
+### CLI Commands
+
+```bash
+rege invoke '<ritual syntax>'    # Execute invocation
+rege status                      # Show system status
+rege repl                        # Interactive mode
+rege fragments list|show|create  # Fragment management
+rege checkpoint create|list      # Checkpointing
+rege recover [mode]              # System recovery
+```
 
 ## Key Concepts
 
 ### Invocation Syntax
-Organs are "called" using ritual syntax:
+Organs are called using ritual syntax:
 ```
 ::CALL_ORGAN [ORGAN_NAME]
 ::WITH [SYMBOL or INPUT]
@@ -51,8 +111,17 @@ Organs are "called" using ritual syntax:
 ::EXPECT [output_form]
 ```
 
+### Charge System
+| Tier | Range | Behavior |
+|------|-------|----------|
+| LATENT | 0-25 | Background, no processing |
+| PROCESSING | 26-50 | Active consideration |
+| ACTIVE | 51-70 | Full engagement |
+| INTENSE | 71-85 | Canon candidate |
+| CRITICAL | 86-100 | Immediate action |
+
 ### Tag System
-Content is tagged for tracking: `CANON+`, `ECHO+`, `ARCHIVE+`, `VOLATILE+`, `RITUAL+`, `MIRROR+`, `REMIX+`, `MASK+`, `BROKEN_LOOP+`
+Content tagged for tracking: `CANON+`, `ECHO+`, `ARCHIVE+`, `VOLATILE+`, `RITUAL+`, `MIRROR+`, `REMIX+`, `MASK+`, `FUSE+`
 
 ### LG4 Translation Modes
 Symbol-to-code conversion patterns:
@@ -65,16 +134,22 @@ Symbol-to-code conversion patterns:
 ### Laws
 79+ recursive laws govern the system (e.g., LAW_01: Recursive Primacy, LAW_06: Symbol-to-Code Equivalence)
 
-## Working with This Project
+## Development
 
-This is a documentation-only project. When editing:
+### Running Tests
+```bash
+pytest                      # Run all tests
+pytest --cov=rege           # With coverage
+pytest rege/tests/test_parser.py -v  # Specific file
+```
+
+### Working with Documentation
 - Maintain the ritual/mythic tone and formatting conventions
 - Use the established tag system when adding content
 - Respect the inter-organ routing logic (Soul Patchbay as hub)
 - Follow the 7-module AAW study flow: INPUT_RITUAL → RAA_ACADEMIC_LOOP → EMI_MYTH_INTERPRETATION → AA10_REFERENCIAL_CROSSMAPPING → SELF_AS_MIRROR → CODE_EXPORT_SCT → RECURSION_ENGINE_ARCHIVE
-- Code examples should translate symbolic concepts into Python, Max/MSP, or JSON
 
 ## File Naming Convention
 `RE-GE_[TYPE]_[NUMBER]_[NAME].md`
-- TYPE: ORG_BODY, OS_INTERFACE, AAW_CORE
+- TYPE: ORG_BODY, OS_INTERFACE, AAW_CORE, PROTOCOL
 - Stylized with `4` replacing `A` in certain contexts (ET4L, R!4L)
