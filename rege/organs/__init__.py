@@ -13,6 +13,12 @@ Each organ implements specific mythic functions:
 - ECHO_SHELL: Decay and whispered loops
 - DREAM_COUNCIL: Prophecy and dream processing
 - MASK_ENGINE: Identity and persona assembly
+- CHAMBER_OF_COMMERCE: Symbolic economy and mythic valuation
+- BLOCKCHAIN_ECONOMY: Immutable record system for ritual tracking
+- PLACE_PROTOCOLS: Spatial context engine
+- TIME_RULES: Temporal recursion engine
+- PROCESS_PRODUCT: Converts lived process into sharable forms
+- PUBLISHING_TEMPLE: Final gate for releasing outputs
 """
 
 from rege.organs.base import OrganHandler
@@ -27,13 +33,19 @@ from rege.organs.bloom_engine import BloomEngine
 from rege.organs.echo_shell import EchoShell
 from rege.organs.dream_council import DreamCouncil
 from rege.organs.mask_engine import MaskEngine
+from rege.organs.chamber_commerce import ChamberOfCommerce
+from rege.organs.blockchain_economy import BlockchainEconomy
+from rege.organs.place_protocols import PlaceProtocols
+from rege.organs.time_rules import TimeRulesEngine
+from rege.organs.process_product import ProcessProductConverter
+from rege.organs.publishing_temple import PublishingTemple
 
 __all__ = [
     # Base
     "OrganHandler",
     "OrganRegistry",
     "get_organ_registry",
-    # Organs
+    # Core Organs (01-11)
     "HeartOfCanon",
     "MirrorCabinet",
     "MythicSenate",
@@ -44,4 +56,11 @@ __all__ = [
     "EchoShell",
     "DreamCouncil",
     "MaskEngine",
+    # Extended Organs (12-22)
+    "ChamberOfCommerce",
+    "BlockchainEconomy",
+    "PlaceProtocols",
+    "TimeRulesEngine",
+    "ProcessProductConverter",
+    "PublishingTemple",
 ]

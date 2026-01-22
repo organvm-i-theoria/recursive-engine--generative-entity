@@ -11,6 +11,7 @@ from rege.core.exceptions import ValidationError, InvalidModeError, OrganNotFoun
 
 # Organ Registry - Configuration for each organ
 ORGAN_REGISTRY: Dict[str, Dict[str, Any]] = {
+    # Core organs (01-11)
     "HEART_OF_CANON": {
         "valid_modes": ["mythic", "recursive", "devotional", "default"],
         "required_charge": 0,
@@ -76,6 +77,43 @@ ORGAN_REGISTRY: Dict[str, Dict[str, Any]] = {
         "required_charge": 0,
         "output_types": ["persona", "mask_record", "identity_layer"],
         "description": "Identity layers and persona assembly",
+    },
+    # Extended organs (12-22)
+    "CHAMBER_OF_COMMERCE": {
+        "valid_modes": ["value", "trade", "mint", "ledger", "balance", "default"],
+        "required_charge": 0,
+        "output_types": ["valuation", "trade_record", "mint_record", "ledger", "balance", "economy_status"],
+        "description": "Symbolic economy and mythic valuation engine",
+    },
+    "BLOCKCHAIN_ECONOMY": {
+        "valid_modes": ["mint", "verify", "contract", "history", "contributors", "default"],
+        "required_charge": 0,
+        "output_types": ["block", "verification_result", "contract", "history", "contributor_stats", "chain_status"],
+        "description": "Immutable record system for ritual tracking",
+    },
+    "PLACE_PROTOCOLS": {
+        "valid_modes": ["enter", "exit", "map", "rules", "default"],
+        "required_charge": 0,
+        "output_types": ["place_state", "transition_record", "zone_rules", "location_map"],
+        "description": "Spatial context engine for location-aware invocations",
+    },
+    "TIME_RULES": {
+        "valid_modes": ["cycle", "schedule", "decay", "recurrence", "default"],
+        "required_charge": 0,
+        "output_types": ["cycle_state", "schedule_entry", "decay_result", "recurrence_record", "temporal_state"],
+        "description": "Temporal recursion engine for bloom cycles and charge-based timing",
+    },
+    "PROCESS_PRODUCT": {
+        "valid_modes": ["evaluate", "convert", "tier", "formats", "default"],
+        "required_charge": 71,
+        "output_types": ["readiness_report", "product", "tier_assignment", "format_list", "converter_status"],
+        "description": "Converts lived process into sharable forms",
+    },
+    "PUBLISHING_TEMPLE": {
+        "valid_modes": ["sanctify", "publish", "seal", "withdraw", "queue", "default"],
+        "required_charge": 0,
+        "output_types": ["sanctification", "publication", "seal_record", "withdrawal", "queue_status", "temple_status"],
+        "description": "Final gate for releasing outputs",
     },
     # Protocol pseudo-organs
     "PROTOCOL_FUSE01": {

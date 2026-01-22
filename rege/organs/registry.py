@@ -167,6 +167,7 @@ def register_default_organs() -> OrganRegistry:
     Returns:
         The registry with all organs registered
     """
+    # Core organs (01-11)
     from rege.organs.heart_of_canon import HeartOfCanon
     from rege.organs.mirror_cabinet import MirrorCabinet
     from rege.organs.mythic_senate import MythicSenate
@@ -177,9 +178,17 @@ def register_default_organs() -> OrganRegistry:
     from rege.organs.echo_shell import EchoShell
     from rege.organs.dream_council import DreamCouncil
     from rege.organs.mask_engine import MaskEngine
+    # Extended organs (12-22)
+    from rege.organs.chamber_commerce import ChamberOfCommerce
+    from rege.organs.blockchain_economy import BlockchainEconomy
+    from rege.organs.place_protocols import PlaceProtocols
+    from rege.organs.time_rules import TimeRulesEngine
+    from rege.organs.process_product import ProcessProductConverter
+    from rege.organs.publishing_temple import PublishingTemple
 
     registry = get_organ_registry()
 
+    # Core organs
     registry.register_class(HeartOfCanon)
     registry.register_class(MirrorCabinet)
     registry.register_class(MythicSenate)
@@ -190,5 +199,12 @@ def register_default_organs() -> OrganRegistry:
     registry.register_class(EchoShell)
     registry.register_class(DreamCouncil)
     registry.register_class(MaskEngine)
+    # Extended organs
+    registry.register_class(ChamberOfCommerce)
+    registry.register_class(BlockchainEconomy)
+    registry.register_class(PlaceProtocols)
+    registry.register_class(TimeRulesEngine)
+    registry.register_class(ProcessProductConverter)
+    registry.register_class(PublishingTemple)
 
     return registry
