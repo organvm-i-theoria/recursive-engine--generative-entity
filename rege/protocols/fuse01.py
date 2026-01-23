@@ -150,34 +150,47 @@ class FusionProtocol:
 
         return fused
 
-    def rollback(self, fused_id: str, reason: str) -> Dict[str, Any]:
+    def rollback(self, fused_id: str, reason: str = "Manual rollback") -> Dict[str, Any]:
         """
         Rollback a fusion if within the rollback window.
 
         Args:
             fused_id: ID of the fused fragment
-            reason: Reason for rollback
+            reason: Reason for rollback (default: "Manual rollback")
 
         Returns:
-            Rollback result
-
-        Raises:
-            FusionRollbackFailed: If rollback not possible
+            Rollback result dictionary with status, fused_id, restored_count
         """
         if fused_id not in self.fusion_registry:
-            raise FusionRollbackFailed(fused_id, "Fusion not found")
+            return {
+                "status": "failed",
+                "reason": "Fusion not found",
+                "fused_id": fused_id,
+            }
 
         fused = self.fusion_registry[fused_id]
 
         if not fused.rollback_available:
-            raise FusionRollbackFailed(fused_id, "Rollback not available")
+            return {
+                "status": "failed",
+                "reason": "Rollback not available",
+                "fused_id": fused_id,
+            }
 
         if datetime.now() > fused.rollback_deadline:
-            raise FusionRollbackFailed(fused_id, "Rollback window expired")
+            return {
+                "status": "failed",
+                "reason": "Rollback window expired",
+                "fused_id": fused_id,
+            }
 
         # Check if fused fragment has been further processed
         if "CANON+" in fused.tags:
-            raise FusionRollbackFailed(fused_id, "Cannot rollback canonized fusion")
+            return {
+                "status": "failed",
+                "reason": "Cannot rollback canonized fusion",
+                "fused_id": fused_id,
+            }
 
         # Restore source fragments
         for fragment in fused.source_fragments:
@@ -200,6 +213,7 @@ class FusionProtocol:
         return {
             "status": "rolled_back",
             "fused_id": fused_id,
+            "restored_count": len(fused.source_fragments),
             "fragments_restored": [f.id for f in fused.source_fragments],
             "reason": reason,
         }
@@ -279,6 +293,26 @@ class FusionProtocol:
     def get_rollback_log(self) -> List[Dict]:
         """Get rollback history."""
         return self._rollback_log.copy()
+
+    def get_eligible_fragments(self) -> List[Fragment]:
+        """
+        Get fragments that are eligible for fusion.
+
+        Returns fragments from source_fragments of active fusions that meet
+        the eligibility criteria (charge >= 70).
+        """
+        # Note: In a real system, this would query the fragment store
+        # For now, return fragments from existing fusions that could be re-fused
+        eligible = []
+
+        for fused in self.fusion_registry.values():
+            if fused.status == "rolled_back":
+                # Rolled-back source fragments might be eligible again
+                for fragment in fused.source_fragments:
+                    if fragment.charge >= self.FUSION_CHARGE_THRESHOLD:
+                        eligible.append(fragment)
+
+        return eligible
 
 
 # Global fusion protocol instance

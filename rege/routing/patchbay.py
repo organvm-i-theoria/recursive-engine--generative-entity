@@ -342,6 +342,7 @@ class PatchQueue:
             "total_size": len(self._heap),
             "max_size": self.max_size,
             "by_priority": by_priority,
+            "priority_distribution": by_priority,  # Alias for CLI compatibility
             "collision_count": self.collision_count,
             "deadlock_count": self.deadlock_count,
             "total_enqueued": self._counter,
@@ -358,11 +359,27 @@ class PatchQueue:
         """Get all patches targeting a specific output node."""
         return self._pending_by_output.get(output_node, []).copy()
 
-    def clear(self) -> None:
-        """Clear the entire queue."""
+    def clear(self) -> int:
+        """
+        Clear the entire queue.
+
+        Returns:
+            Number of patches removed
+        """
+        count = len(self._heap)
         self._heap = []
         self._pending_by_output = {}
         self._active_routes = set()
+        return count
+
+    def peek_all(self) -> List[Patch]:
+        """
+        Get all patches in the queue without removing them.
+
+        Returns:
+            List of all patches, sorted by priority
+        """
+        return sorted(self._heap)
 
     def to_list(self) -> List[Dict]:
         """Export queue contents as list of dictionaries."""

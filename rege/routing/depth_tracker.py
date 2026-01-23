@@ -42,6 +42,23 @@ class DepthTracker:
     def __init__(self):
         self.depth_log: List[Dict[str, Any]] = []
         self._exhaustion_count = 0
+        self._current_depth = 0
+        self._max_depth_reached = 0
+
+    @property
+    def current_depth(self) -> int:
+        """Get the current recursion depth."""
+        return self._current_depth
+
+    @property
+    def max_depth_reached(self) -> int:
+        """Get the maximum depth reached in this session."""
+        return self._max_depth_reached
+
+    @property
+    def depth_exhaustions(self) -> int:
+        """Get the number of depth exhaustion events."""
+        return self._exhaustion_count
 
     def get_limit(self, patch: Patch) -> int:
         """
@@ -131,6 +148,9 @@ class DepthTracker:
             New depth value
         """
         patch.depth += 1
+        self._current_depth = patch.depth
+        if patch.depth > self._max_depth_reached:
+            self._max_depth_reached = patch.depth
         return patch.depth
 
     def reset_depth(self, patch: Patch) -> None:
@@ -168,9 +188,18 @@ class DepthTracker:
         """Get recent depth exhaustion log entries."""
         return self.depth_log[-limit:]
 
+    def get_exhaustion_log(self, limit: int = 100) -> List[Dict]:
+        """Get recent depth exhaustion log entries (alias for get_depth_log)."""
+        return self.depth_log[-limit:]
+
     def clear_log(self) -> None:
         """Clear the depth log."""
         self.depth_log = []
+
+    def clear_exhaustion_log(self) -> None:
+        """Clear the depth exhaustion log (alias for clear_log)."""
+        self.depth_log = []
+        self._exhaustion_count = 0
 
     def get_depth_status(self, patch: Patch) -> Dict[str, Any]:
         """

@@ -265,35 +265,67 @@ class LawEnforcer:
         else:
             return "CRITICAL"
 
-    def get_law(self, law_id: str) -> Optional[Law]:
-        """Get a law by ID."""
-        return self._laws.get(law_id)
+    def get_law(self, law_id: str) -> Optional[Dict[str, Any]]:
+        """Get a law by ID as dictionary."""
+        law = self._laws.get(law_id)
+        if law:
+            return {
+                "id": law.law_id,
+                "name": law.name,
+                "description": law.description,
+                "consequence": law.consequence,
+                "charge_threshold": law.charge_threshold,
+                "active": law.active,
+                "violations_count": law.violations_count,
+            }
+        return None
 
-    def get_all_laws(self) -> List[Law]:
-        """Get all laws."""
-        return list(self._laws.values())
+    def get_all_laws(self) -> List[Dict[str, Any]]:
+        """Get all laws as list of dictionaries."""
+        return [
+            {
+                "id": law.law_id,
+                "name": law.name,
+                "description": law.description,
+                "consequence": law.consequence,
+                "active": law.active,
+                "violations_count": law.violations_count,
+            }
+            for law in self._laws.values()
+        ]
 
-    def get_active_laws(self) -> List[Law]:
-        """Get all active laws."""
-        return [law for law in self._laws.values() if law.active]
+    def get_active_laws(self) -> List[Dict[str, Any]]:
+        """Get all active laws as list of dictionaries."""
+        return [
+            {
+                "id": law.law_id,
+                "name": law.name,
+                "description": law.description,
+                "consequence": law.consequence,
+                "active": law.active,
+                "violations_count": law.violations_count,
+            }
+            for law in self._laws.values()
+            if law.active
+        ]
 
     def get_violation_log(self, limit: int = 50) -> List[Dict]:
         """Get recent violation log entries."""
         return self._violation_log[-limit:]
 
-    def deactivate_law(self, law_id: str) -> bool:
+    def deactivate_law(self, law_id: str) -> Dict[str, Any]:
         """Deactivate a law."""
         if law_id in self._laws:
             self._laws[law_id].active = False
-            return True
-        return False
+            return {"status": "deactivated", "law_id": law_id}
+        return {"status": "failed", "reason": f"Law not found: {law_id}"}
 
-    def activate_law(self, law_id: str) -> bool:
+    def activate_law(self, law_id: str) -> Dict[str, Any]:
         """Activate a law."""
         if law_id in self._laws:
             self._laws[law_id].active = True
-            return True
-        return False
+            return {"status": "activated", "law_id": law_id}
+        return {"status": "failed", "reason": f"Law not found: {law_id}"}
 
 
 # Global law enforcer instance

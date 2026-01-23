@@ -225,9 +225,9 @@ class TestInactiveLaws:
             violations = result["violations"]
             # Note: _check_specific_violations still runs, but law.check() skipped
             # Check that law.violations_count wasn't incremented
-            law = enforcer.get_law("LAW_01")
+            law_data = enforcer.get_law("LAW_01")
             # The specific check still runs, so we just verify deactivation worked
-            assert law.active is False
+            assert law_data["active"] is False
 
 
 class TestApplyConsequence:
@@ -353,11 +353,11 @@ class TestGetLaw:
     """Test get_law method."""
 
     def test_get_existing_law(self, enforcer):
-        """Get existing law returns Law object."""
+        """Get existing law returns dictionary."""
         law = enforcer.get_law("LAW_01")
 
         assert law is not None
-        assert law.law_id == "LAW_01"
+        assert law["id"] == "LAW_01"
 
     def test_get_nonexistent_law(self, enforcer):
         """Get non-existent law returns None."""
@@ -370,52 +370,52 @@ class TestActivateLaw:
     """Test activate_law method."""
 
     def test_activate_existing_law(self, enforcer):
-        """Activate existing law returns True."""
+        """Activate existing law returns status dict."""
         enforcer.deactivate_law("LAW_01")
 
         result = enforcer.activate_law("LAW_01")
 
-        assert result is True
-        assert enforcer.get_law("LAW_01").active is True
+        assert result["status"] == "activated"
+        assert enforcer.get_law("LAW_01")["active"] is True
 
     def test_activate_nonexistent_law(self, enforcer):
-        """Activate non-existent law returns False."""
+        """Activate non-existent law returns failed status."""
         result = enforcer.activate_law("NONEXISTENT")
 
-        assert result is False
+        assert result["status"] == "failed"
 
     def test_activate_already_active(self, enforcer):
         """Activate already-active law is idempotent."""
         # LAW_01 starts active
         result = enforcer.activate_law("LAW_01")
 
-        assert result is True
-        assert enforcer.get_law("LAW_01").active is True
+        assert result["status"] == "activated"
+        assert enforcer.get_law("LAW_01")["active"] is True
 
 
 class TestDeactivateLaw:
     """Test deactivate_law method."""
 
     def test_deactivate_existing_law(self, enforcer):
-        """Deactivate existing law returns True."""
+        """Deactivate existing law returns status dict."""
         result = enforcer.deactivate_law("LAW_01")
 
-        assert result is True
-        assert enforcer.get_law("LAW_01").active is False
+        assert result["status"] == "deactivated"
+        assert enforcer.get_law("LAW_01")["active"] is False
 
     def test_deactivate_nonexistent_law(self, enforcer):
-        """Deactivate non-existent law returns False."""
+        """Deactivate non-existent law returns failed status."""
         result = enforcer.deactivate_law("NONEXISTENT")
 
-        assert result is False
+        assert result["status"] == "failed"
 
     def test_deactivate_already_inactive(self, enforcer):
         """Deactivate already-inactive law is idempotent."""
         enforcer.deactivate_law("LAW_01")
         result = enforcer.deactivate_law("LAW_01")
 
-        assert result is True
-        assert enforcer.get_law("LAW_01").active is False
+        assert result["status"] == "deactivated"
+        assert enforcer.get_law("LAW_01")["active"] is False
 
 
 class TestGetAllLaws:
@@ -430,7 +430,7 @@ class TestGetAllLaws:
     def test_get_all_laws_includes_core(self, enforcer):
         """get_all_laws includes core laws."""
         laws = enforcer.get_all_laws()
-        law_ids = [law.law_id for law in laws]
+        law_ids = [law["id"] for law in laws]
 
         assert "LAW_01" in law_ids
         assert "LAW_81" in law_ids
@@ -457,7 +457,7 @@ class TestGetActiveLaws:
     def test_get_active_laws_all_deactivated(self, enforcer):
         """All laws deactivated returns empty list."""
         for law in enforcer.get_all_laws():
-            enforcer.deactivate_law(law.law_id)
+            enforcer.deactivate_law(law["id"])
 
         active = enforcer.get_active_laws()
 
@@ -516,7 +516,7 @@ class TestRegisterLaw:
 
         retrieved = enforcer.get_law("CUSTOM_01")
         assert retrieved is not None
-        assert retrieved.name == "Custom Law"
+        assert retrieved["name"] == "Custom Law"
 
 
 class TestGlobalEnforcer:
