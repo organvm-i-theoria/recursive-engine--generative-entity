@@ -1,5 +1,13 @@
 # RE:GE - Recursive Engine: Generative Entity
 
+[![CI](https://github.com/organvm-i-theoria/recursive-engine--generative-entity/actions/workflows/ci.yml/badge.svg)](https://github.com/organvm-i-theoria/recursive-engine--generative-entity/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-pending-lightgrey)](https://github.com/organvm-i-theoria/recursive-engine--generative-entity)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/organvm-i-theoria/recursive-engine--generative-entity/blob/main/LICENSE)
+[![Organ I](https://img.shields.io/badge/Organ-I%20Theoria-8B5CF6)](https://github.com/organvm-i-theoria)
+[![Status](https://img.shields.io/badge/status-active-brightgreen)](https://github.com/organvm-i-theoria/recursive-engine--generative-entity)
+[![Python](https://img.shields.io/badge/lang-Python-informational)](https://github.com/organvm-i-theoria/recursive-engine--generative-entity)
+
+
 [![ORGAN-I: Theory](https://img.shields.io/badge/ORGAN--I-Theory-1a237e?style=flat-square)](https://github.com/organvm-i-theoria)
 [![Tests](https://img.shields.io/badge/tests-1254%20passing-brightgreen?style=flat-square)]()
 [![Coverage](https://img.shields.io/badge/coverage-85%25-green?style=flat-square)]()
