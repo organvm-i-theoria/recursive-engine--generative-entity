@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "title": "FUNCTIONcalled Registry Schema",
+  "description": "Catalogue-of-catalogues for FUNCTIONcalled() sidecars and their source files.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to the primary file."
+          },
+          "sidecar": {
+            "type": "string",
+            "description": "Relative path to .meta.json sidecar (if used)."
+          },
+          "name": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "string",
+            "enum": [
+              "light",
+              "full"
+            ]
+          },
+          "version": {
+            "type": "string"
+          },
+          "schema:type": {
+            "type": "string"
+          },
+          "encodingFormat": {
+            "type": "string"
+          },
+          "inLanguage": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          },
+          "dc:subject": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "programmingLanguage": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "object",
+            "properties": {
+              "algo": {
+                "type": "string",
+                "enum": [
+                  "sha256",
+                  "sha1",
+                  "md5"
+                ]
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "algo",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "dateCreated": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dateModified": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "path",
+          "name"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "entries"
+  ],
+  "additionalProperties": false
+}
