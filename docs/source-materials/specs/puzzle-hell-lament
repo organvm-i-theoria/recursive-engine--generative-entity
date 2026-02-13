@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+    <title>The Lament Configuration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; overflow: hidden; }
+        body {
+            background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
+            font-family: 'Cinzel', serif;
+            color: #fff;
+            cursor: none;
+        }
+        .custom-cursor {
+            position: fixed; width: 20px; height: 20px; background: radial-gradient(circle, #ff6600 0%, #cc4400 100%);
+            border-radius: 50%; pointer-events: none; z-index: 9999; mix-blend-mode: screen; transition: transform 0.1s ease;
+            display: block;
+        }
+        @media (hover: none) { .custom-cursor { display: none; } }
+        #container, canvas { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; width: 100%; }
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 100; background: linear-gradient(145deg, rgba(0,0,0,0.9), rgba(20,20,20,0.8));
+            backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,102,0,0.3); max-width: 280px; }
+        #ui.collapsed { transform: translateX(-280px); }
+        .menu-toggle { position: absolute; right: -50px; top: 0; width: 45px; height: 45px; background: linear-gradient(145deg, rgba(0,0,0,0.9), rgba(20,20,20,0.8));
+            border: 1px solid rgba(255,102,0,0.4); border-radius: 0 12px 12px 0; color: #ff6600; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; transition: all 0.3s ease; backdrop-filter: blur(10px); }
+        .menu-toggle:hover { background: linear-gradient(145deg, rgba(255,102,0,0.2), rgba(20,20,20,0.9)); box-shadow: 0 0 20px rgba(255,102,0,0.4); }
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; margin-bottom: 10px; color: #ff6600; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .face-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .face-buttons button { background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border: 1px solid rgba(255,102,0,0.3); color: #fff; padding: 10px 8px; border-radius: 6px;
+            cursor: pointer; font-size: 10px; font-family: 'Cinzel', serif; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+        .face-buttons button:hover { background: linear-gradient(145deg, #ff6600, #cc4400); box-shadow: 0 0 15px rgba(255,102,0,0.5); transform: translateY(-2px); }
+        .face-buttons button:active { transform: translateY(0); }
+        .slider-container input[type="range"] { width: 100%; height: 6px; background: linear-gradient(90deg, #333, #666); border-radius: 3px; outline: none; -webkit-appearance: none; }
+        .slider-container input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #ff6600; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(255,102,0,0.5); }
+        .action-buttons { display: flex; gap: 10px; }
+        .action-buttons button { background: linear-gradient(145deg, #444, #222); border: 1px solid rgba(255,102,0,0.3); color: #fff; padding: 12px 16px; border-radius: 6px;
+            cursor: pointer; font-size: 11px; font-family: 'Cinzel', serif; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
+        .action-buttons button:hover { background: linear-gradient(145deg, #ff6600, #cc4400); box-shadow: 0 0 15px rgba(255,102,0,0.3); }
+        #info { position: absolute; bottom: 20px; left: 20px; z-index: 100; background: linear-gradient(145deg, rgba(0,0,0,0.9), rgba(20,20,20,0.8));
+            backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,102,0,0.3); max-width: 300px; font-size: 12px; color: #ccc; }
+        #info.collapsed { transform: translateX(-320px); }
+        .info-toggle { position: absolute; right: -50px; top: 0; width: 45px; height: 45px; background: linear-gradient(145deg, rgba(0,0,0,0.9), rgba(20,20,20,0.8));
+            border: 1px solid rgba(255,102,0,0.4); border-radius: 0 12px 12px 0; color: #ff6600; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; transition: all 0.3s ease; backdrop-filter: blur(10px); }
+        .info-toggle:hover { background: linear-gradient(145deg, rgba(255,102,0,0.2), rgba(20,20,20,0.9)); box-shadow: 0 0 20px rgba(255,102,0,0.4); }
+        .status-display { position: absolute; top: 20px; right: 20px; background: linear-gradient(145deg, rgba(0,0,0,0.9), rgba(20,20,20,0.8));
+            backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,102,0,0.3); font-size: 14px; color: #ff6600; text-align: center;
+            font-family: 'Cinzel', serif; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        #chaseStatus { top: 60px; }
+        .solved-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(145deg, rgba(0,0,0,0.95), rgba(20,20,20,0.9));
+            border: 2px solid #ff6600; padding: 30px; border-radius: 15px; box-shadow: 0 0 50px rgba(255,102,0,0.8); font-size: 24px; color: #ff6600; text-align: center;
+            font-family: 'Cinzel', serif; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.5s ease; }
+        .solved-message.show { opacity: 1; visibility: visible; }
+        @media (max-width: 768px) {
+            #ui { max-width: 250px; padding: 15px; font-size: calc(12px + 1vw); }
+            .face-buttons { grid-template-columns: repeat(2, 1fr); }
+            .face-buttons button, .action-buttons button, #btn-export { padding: 14px; font-size: 14px; }
+            .menu-toggle, .info-toggle { width: 40px; height: 40px; font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-cursor"></div>
+    <div id="container">
+        <div id="ui">
+            <div class="menu-toggle" onclick="toggleMenu()" title="Toggle Controls">⚙</div>
+            <div class="control-group">
+                <label>Rotation Controls:</label>
+                <div class="face-buttons">
+                    <button onclick="rotateFace('top')" id="btn-top">Top</button>
+                    <button onclick="rotateFace('bottom')" id="btn-bottom">Bottom</button>
+                    <button onclick="rotateFace('front')" id="btn-front">Front</button>
+                    <button onclick="rotateFace('back')" id="btn-back">Back</button>
+                    <button onclick="rotateFace('left')" id="btn-left">Left</button>
+                    <button onclick="rotateFace('right')" id="btn-right">Right</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Animation Speed:</label>
+                <div class="slider-container">
+                    <input type="range" id="speedSlider" min="0.3" max="2.5" value="1" step="0.1">
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="action-buttons">
+                    <button onclick="resetBox()">Reset</button>
+                    <button onclick="randomSolve()">Scramble</button>
+                    <button id="btn-chase" onclick="startChaseMode()">Chase Mode</button>
+                    <button id="btn-power" onclick="usePowerUp()">Pinhead's Power</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <button onclick="toggleHint()" id="hintButton">Show Hint</button>
+                <div id="hintText" style="display: none; color: #ccc; margin-top: 10px;">Align the top face's symbol with the front face's maze.</div>
+            </div>
+            <div class="control-group">
+                <button id="btn-export">Export</button>
+            </div>
+        </div>
+        <div id="info">
+            <div class="info-toggle" onclick="toggleInfo()" title="Toggle Info">ℹ</div>
+            <div>🖱️ Mouse/Touch: Rotate view • 🎯 Click faces to manipulate</div>
+            <div>🔄 Align all patterns to solve the configuration</div>
+            <div style="margin-top: 10px; color: #ff6600; font-style: italic;">"We have such sights to show you..."</div>
+        </div>
+        <div class="status-display">
+            <div id="moveCounter">Moves: 0</div>
+            <div id="puzzleStatus">Configuring...</div>
+        </div>
+        <div id="chaseStatus" class="status-display">
+            <div>Time: <span id="timer">60</span>s</div>
+            <div>Cenobite Proximity: <span id="proximity">Far</span></div>
+        </div>
+        <div class="solved-message" id="solvedMessage">
+            <div>The Box is Open!</div>
+            <div style="font-size: 14px; margin-top: 10px; color: #ccc;">The Cenobites have been summoned...</div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Audio placeholders (replace with actual base64-encoded MP3 data)
+        const rotationSound = new Audio("data:audio/mpeg;base64,//uQR..."); // Creaking sound
+        const solveSound = new Audio("data:audio/mpeg;base64,//uQS..."); // Dramatic tone
+
+        let scene, camera, renderer, box, controls;
+        let rotatingFaces = {}; let animationSpeed = 1; let moveCount = 0; let isAnimating = false;
+        let puzzleState = {}; let solvedState = {}; let fragments = [];
+        let timeLeft = 60; let cenobiteProximity = 'Far'; let touchStartDistance = 0;
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene(); scene.background = new THREE.Color(0x000000); scene.fog = new THREE.Fog(0x000000, 10, 50);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(6, 6, 6); camera.lookAt(0, 0, 0);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            if (!renderer.extensions.get('WEBGL2')) console.warn('WebGL2 not supported');
+            renderer.setSize(window.innerWidth, window.innerHeight); renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.autoClear = false;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.2); scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true; directionalLight.shadow.mapSize.width = window.innerWidth < 768 ? 1024 : 2048;
+            directionalLight.shadow.mapSize.height = window.innerWidth < 768 ? 1024 : 2048; directionalLight.shadow.camera.near = 0.1;
+            directionalLight.shadow.camera.far = 50; directionalLight.shadow.radius = 4; scene.add(directionalLight);
+            const orangeLight = new THREE.PointLight(0xff6600, 1, 100); orangeLight.position.set(0, 0, 10); orangeLight.castShadow = true;
+            orangeLight.shadow.mapSize.width = 1024; orangeLight.shadow.mapSize.height = 1024; scene.add(orangeLight);
+
+            // Ground
+            const groundGeometry = new THREE.PlaneGeometry(20, 20); const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9, depthWrite: true });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial); ground.rotation.x = -Math.PI / 2; ground.position.y = -2.5; ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Puzzle box
+            createPuzzleBox(); initializePuzzleState();
+
+            // Controls
+            setupControls(); setupCustomCursor();
+
+            // Resize listener
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.getElementById('container').style.height = window.innerHeight + 'px';
+            });
+            window.addEventListener('orientationchange', () => {
+                camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.getElementById('container').style.height = window.innerHeight + 'px';
+            });
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate); controls.update(); checkFragments(); renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        function setupControls() {
+            controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.dampingFactor = 0.05;
+            controls.minDistance = 5; controls.maxDistance = 15;
+        }
+
+        function setupCustomCursor() {
+            const cursor = document.querySelector('.custom-cursor');
+            document.addEventListener('mousemove', (e) => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
+            document.addEventListener('mousedown', () => { cursor.style.transform = 'scale(0.8)'; });
+            document.addEventListener('mouseup', () => { cursor.style.transform = 'scale(1)'; });
+        }
+
+        function createPuzzleBox() {
+            box = new THREE.Group();
+            const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.7, metalness: 0.0, depthWrite: true });
+            const metalMaterial = new THREE.MeshStandardMaterial({ color: 0xC0C0C0, roughness: 0.3, metalness: 0.9, depthWrite: true });
+            const glowMaterial = new THREE.MeshStandardMaterial({ color: 0xff6600, roughness: 0.1, metalness: 0.0, emissive: 0x331100, depthWrite: true });
+
+            const cubeSize = 2.5;
+            const faces = [
+                { name: 'top', position: [0, cubeSize/2, 0], rotation: [0, 0, 0] },
+                { name: 'bottom', position: [0, -cubeSize/2, 0], rotation: [Math.PI, 0, 0] },
+                { name: 'front', position: [0, 0, cubeSize/2], rotation: [-Math.PI/2, 0, 0] },
+                { name: 'back', position: [0, 0, -cubeSize/2], rotation: [Math.PI/2, 0, 0] },
+                { name: 'left', position: [-cubeSize/2, 0, 0], rotation: [0, 0, Math.PI/2] },
+                { name: 'right', position: [cubeSize/2, 0, 0], rotation: [0, 0, -Math.PI/2] }
+            ];
+
+            faces.forEach(face => {
+                const faceGroup = new THREE.Group(); faceGroup.name = face.name;
+                const faceGeometry = new THREE.PlaneGeometry(cubeSize, cubeSize);
+                const faceMesh = new THREE.Mesh(faceGeometry, baseMaterial); faceMesh.castShadow = true; faceMesh.receiveShadow = true;
+                faceGroup.add(faceMesh); createEnhancedFacePatterns(faceGroup, face.name, metalMaterial, glowMaterial);
+                faceGroup.position.set(...face.position); faceGroup.rotation.set(...face.rotation); box.add(faceGroup);
+            });
+
+            // Fragments
+            const fragmentGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+            const fragmentMaterial = new THREE.MeshStandardMaterial({ color: 0xff6600 }); 
+            for (let i = 0; i < 3; i++) {
+                const fragment = new THREE.Mesh(fragmentGeometry, fragmentMaterial);
+                fragment.position.set(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
+                fragment.userData.collected = false; fragments.push(fragment); scene.add(fragment);
+            }
+
+            scene.add(box);
+        }
+
+        function createEnhancedFacePatterns(faceGroup, faceName, metalMaterial, glowMaterial) {
+            const patterns = { 'top': () => createLamentSymbol(faceGroup, glowMaterial), 'bottom': () => createHellishCross(faceGroup, metalMaterial),
+                'front': () => createGeometricMaze(faceGroup, metalMaterial), 'back': () => createSpiralOfTorment(faceGroup, metalMaterial),
+                'left': () => createRunicPattern(faceGroup, metalMaterial), 'right': () => createCenobiteSymbol(faceGroup, glowMaterial) };
+            patterns[faceName]();
+        }
+
+        function createLamentSymbol(faceGroup, material) {
+            const symbolGroup = new THREE.Group(); const diamondGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.08, 4);
+            const diamond = new THREE.Mesh(diamondGeometry, material); diamond.position.z = 0.04; diamond.rotation.x = Math.PI / 2; diamond.rotation.z = Math.PI / 4;
+            symbolGroup.add(diamond); for (let i = 0; i < 8; i++) { const angle = (i / 8) * Math.PI * 2; const lineGeometry = new THREE.BoxGeometry(0.8, 0.03, 0.02);
+                const line = new THREE.Mesh(lineGeometry, material); line.position.x = Math.cos(angle) * 0.4; line.position.y = Math.sin(angle) * 0.4; line.position.z = 0.02;
+                line.rotation.z = angle; symbolGroup.add(line); } faceGroup.add(symbolGroup);
+        }
+
+        function createHellishCross(faceGroup, material) { const crossGeometry = new THREE.BoxGeometry(1.5, 0.08, 0.06);
+            const cross1 = new THREE.Mesh(crossGeometry, material); cross1.position.z = 0.03; faceGroup.add(cross1);
+            const cross2 = new THREE.Mesh(crossGeometry, material); cross2.rotation.z = Math.PI / 2; cross2.position.z = 0.03; cross2.position.y = 0.3; faceGroup.add(cross2);
+        }
+
+        function createGeometricMaze(faceGroup, material) { const mazePattern = [[1,1,0,1,1],[1,0,1,0,1],[0,1,1,1,0],[1,0,1,0,1],[1,1,0,1,1]];
+            const segmentSize = 0.3; for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) if (mazePattern[x][y]) {
+                const geometry = new THREE.BoxGeometry(segmentSize, segmentSize, 0.06); const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.x = (x - 2) * segmentSize; mesh.position.y = (y - 2) * segmentSize; mesh.position.z = 0.03; faceGroup.add(mesh);
+            }
+        }
+
+        function createSpiralOfTorment(faceGroup, material) { const spiralPoints = 20; for (let i = 0; i < spiralPoints; i++) {
+            const angle = (i / spiralPoints) * Math.PI * 4; const radius = 0.1 + (i / spiralPoints) * 0.8; const geometry = new THREE.SphereGeometry(0.03 + (i / spiralPoints) * 0.02, 8, 8);
+            const mesh = new THREE.Mesh(geometry, material); mesh.position.x = Math.cos(angle) * radius; mesh.position.y = Math.sin(angle) * radius; mesh.position.z = 0.02;
+            faceGroup.add(mesh);
+        }
+        }
+
+        function createRunicPattern(faceGroup, material) { const runeLines = [
+            { start: [-0.5, -0.8], end: [-0.5, 0.8] }, { start: [-0.5, 0], end: [0.5, 0] }, { start: [0.5, -0.8], end: [0.5, 0.8] }, { start: [-0.5, 0.4], end: [0.5, -0.4] }
+        ]; runeLines.forEach(line => { const length = Math.sqrt(Math.pow(line.end[0] - line.start[0], 2) + Math.pow(line.end[1] - line.start[1], 2));
+            const geometry = new THREE.BoxGeometry(length, 0.04, 0.04); const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.x = (line.start[0] + line.end[0]) / 2; mesh.position.y = (line.start[1] + line.end[1]) / 2; mesh.position.z = 0.02;
+            mesh.rotation.z = Math.atan2(line.end[1] - line.start[1], line.end[0] - line.start[0]); faceGroup.add(mesh);
+        });
+        }
+
+        function createCenobiteSymbol(faceGroup, material) { const centerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            const center = new THREE.Mesh(centerGeometry, material); faceGroup.add(center);
+        }
+
+        function initializePuzzleState() { puzzleState = { top: 0, bottom: 0, front: 0, back: 0, left: 0, right: 0 };
+            solvedState = { top: 1, bottom: 1, front: 1, back: 1, left: 1, right: 1 }; // Example solved state
+        }
+
+        function rotateFace(faceName) { if (!isAnimating) { isAnimating = true; rotationSound.currentTime = 0; rotationSound.play();
+            // Simulate rotation (to be enhanced with animation)
+            puzzleState[faceName] = (puzzleState[faceName] + 1) % 4; moveCount++; document.getElementById('moveCounter').textContent = `Moves: ${moveCount}`;
+            setTimeout(() => { isAnimating = false; checkSolved(); }, 300 / animationSpeed); }
+        }
+
+        function resetBox() { puzzleState = {}; initializePuzzleState(); moveCount = 0; document.getElementById('moveCounter').textContent = `Moves: ${moveCount}`; }
+
+        function randomSolve() { if (!isAnimating) { isAnimating = true; const faces = ['top', 'bottom', 'front', 'back', 'left', 'right'];
+            const sequence = Array(10).fill().map(() => faces[Math.floor(Math.random() * faces.length)]);
+            sequence.forEach((face, index) => { setTimeout(() => rotateFace(face), index * 300 / animationSpeed); });
+            setTimeout(() => isAnimating = false, sequence.length * 300 / animationSpeed);
+        } }
+
+        function autoSolve() { const sequence = Object.keys(puzzleState).filter(f => puzzleState[f] !== solvedState[f]).map(f => f);
+            sequence.forEach((face, index) => { setTimeout(() => rotateFace(face), index * 300 / animationSpeed); });
+        }
+
+        function checkSolved() { const isSolved = Object.keys(puzzleState).every(f => puzzleState[f] === solvedState[f]);
+            if (isSolved) { document.getElementById('solvedMessage').classList.add('show'); solveSound.currentTime = 0; solveSound.play(); }
+            return isSolved;
+        }
+
+        function toggleMenu() { document.getElementById('ui').classList.toggle('collapsed'); }
+        function toggleInfo() { document.getElementById('info').classList.toggle('collapsed'); }
+        document.getElementById('speedSlider').addEventListener('input', (e) => { animationSpeed = parseFloat(e.target.value); });
+
+        function setupTouchControls() {
+            let touchStartX = 0, touchStartY = 0, isRotating = false;
+            document.getElementById('container').addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; isRotating = true; }
+                else if (e.touches.length === 2) { const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY; touchStartDistance = Math.sqrt(dx * dx + dy * dy); }
+            });
+            document.getElementById('container').addEventListener('touchmove', (e) => {
+                if (isRotating && e.touches.length === 1) {
+                    const dx = e.touches[0].clientX - touchStartX; const dy = e.touches[0].clientY - touchStartY;
+                    controls.rotateY(-dx * 0.005); controls.rotateX(-dy * 0.005); touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; e.preventDefault();
+                } else if (e.touches.length === 2 && touchStartDistance > 0) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const currentDistance = Math.sqrt(dx * dx + dy * dy); if (Math.abs(currentDistance - touchStartDistance) > 50) performRitual(); touchStartDistance = 0;
+                }
+            });
+            document.getElementById('container').addEventListener('touchend', () => { isRotating = false; });
+        }
+
+        function usePowerUp() { if (!isAnimating) { isAnimating = true; const faces = ['top', 'bottom', 'front', 'back', 'left', 'right'];
+            const sequence = Array(5).fill().map(() => faces[Math.floor(Math.random() * faces.length)]);
+            sequence.forEach((face, index) => { setTimeout(() => rotateFace(face), index * 300 / animationSpeed); });
+            setTimeout(() => isAnimating = false, sequence.length * 300 / animationSpeed + 5000); // 5s cooldown
+        } }
+
+        function startChaseMode() { const timerElement = document.getElementById('timer'); const proximityElement = document.getElementById('proximity');
+            const interval = setInterval(() => { timeLeft--; timerElement.textContent = timeLeft; if (timeLeft <= 30) cenobiteProximity = 'Approaching';
+                if (timeLeft <= 10) { cenobiteProximity = 'Near'; vibrateCenobiteTaunt(); } proximityElement.textContent = cenobiteProximity;
+                if (timeLeft <= 0 || checkSolved()) { clearInterval(interval); if (timeLeft <= 0) alert("The Cenobites have you!"); resetBox(); }
+            }, 1000); }
+
+        function checkFragments() { fragments.forEach(fragment => {
+            if (!fragment.userData.collected && fragment.position.distanceTo(camera.position) < 1) {
+                fragment.userData.collected = true; scene.remove(fragment); moveCount += 5;
+                document.getElementById('moveCounter').textContent = `Moves: ${moveCount}`; alert("Lament Fragment collected! +5 moves.");
+                if (fragments.every(f => f.userData.collected)) respawnFragments();
+            }
+        }); }
+
+        function respawnFragments() { fragments.forEach(f => { f.position.set(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5); f.userData.collected = false; scene.add(f); }); }
+
+        function performRitual() { if (Math.random() > 0.3 || checkSolved()) { autoSolve(); document.getElementById('solvedMessage').classList.add('show'); }
+            else { alert("The ritual fails! The Cenobites grow angry..."); vibrateCenobiteTaunt(); }
+        }
+
+        function vibrateCenobiteTaunt() { if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]); }
+
+        function toggleHint() { const hintText = document.getElementById('hintText');
+            hintText.style.display = hintText.style.display === 'none' ? 'block' : 'none'; }
+
+        document.getElementById('btn-export').addEventListener('click', () => {
+            renderer.domElement.toBlob(blob => {
+                const file = new File([blob], 'lament-configuration.png', { type: 'image/png' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    navigator.share({ files: [file], title: 'Lament Configuration' });
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = 'lament-configuration.png';
+                    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                }
+            });
+        });
+
+        init(); setupTouchControls();
+    </script>
+</body>
+</html>
