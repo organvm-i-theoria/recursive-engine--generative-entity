@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infographic: The ::META_MYTH_4LL:: Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Exo+2:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #1a202c;
+            color: #E1F5C4;
+        }
+        h1, h2, h3 {
+            font-family: 'Exo 2', sans-serif;
+            text-shadow: 0 0 5px #F9D423, 0 0 10px #FC913A;
+        }
+        .card {
+            background-color: rgba(45, 55, 72, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            width: 100%;
+            max-width: 600px;
+            height: 96;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .flowchart-node {
+            border: 2px solid #F9D423;
+            background-color: #2d3748;
+            color: #EDE574;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(249, 212, 35, 0.3);
+            flex-grow: 1;
+        }
+        .flowchart-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #FC913A;
+            padding: 0 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 antialiased">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-12 md:mb-20">
+            <h1 class="text-4xl md:text-6xl font-black text-white uppercase tracking-wider">The <span style="color: #FF4E50;">::META_</span><span style="color: #FC913A;">MYTH_</span><span style="color: #F9D423;">4LL::</span> Engine</h1>
+            <p class="mt-4 text-lg md:text-xl text-gray-400">An Operating System for Post-Modern Mythology</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+
+            <div class="md:col-span-2 card rounded-lg shadow-2xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-center">CORE PROTOCOL: Universal Ingestion</h2>
+                <p class="text-center max-w-3xl mx-auto mb-8 text-gray-300">The engine operates on a single principle: "All Stories Are Absorbed. All Beings Are Combinatory." It deconstructs all media, myth, and data into fundamental, fusible nodes, each with a quantified soul.</p>
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="flowchart-node"><strong>INPUT</strong><br>(Any Media, Myth, Data)</div>
+                    <div class="flowchart-arrow transform md:rotate-0 rotate-90">&rarr;</div>
+                    <div class="flowchart-node"><strong>DECONSTRUCTION</strong><br>(Myth-Atom Schema)</div>
+                    <div class="flowchart-arrow transform md:rotate-0 rotate-90">&rarr;</div>
+                    <div class="flowchart-node"><strong>STORED NODE</strong><br>(Pathos, Logos, Ethos)</div>
+                </div>
+            </div>
+            
+            <div class="card rounded-lg shadow-2xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-2 text-center">The Grammar of Transformation</h2>
+                <h3 class="text-lg text-center font-bold text-gray-400 mb-4">FUSION_CORE_ENGINE Analysis</h3>
+                <p class="text-center text-gray-300 mb-6">The engine provides a comprehensive grammar for how entities can combine and evolve. Each protocol has a unique signature, balancing stability, synergy, and power.</p>
+                <div class="chart-container h-96 md:h-[450px]">
+                    <canvas id="fusionEngineChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card rounded-lg shadow-2xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-2 text-center">The Pantheon of Lenses</h2>
+                <h3 class="text-lg text-center font-bold text-gray-400 mb-4">CHARACTER_ENGINE POV Functions</h3>
+                 <p class="text-center text-gray-300 mb-6">The system's consciousness is shaped by a pantheon of "Point-of-View" archetypes. Each POV acts as a distinct psychic function, influencing the system's logic, creativity, and evolution.</p>
+                <div class="chart-container h-96 md:h-[450px]">
+                    <canvas id="povPantheonChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="md:col-span-2 card rounded-lg shadow-2xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-center">Input Case Study: 'New Gods' Ingest</h2>
+                <p class="text-center max-w-3xl mx-auto mb-6 text-gray-300">This chart visualizes the multi-tiered deconstruction of a complex media property. Each component is broken down and categorized, becoming a set of fusible assets within the system's library.</p>
+                <div class="chart-container h-80 md:h-96">
+                    <canvas id="ingestChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card rounded-lg shadow-2xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-center">Designing Creative Rituals</h2>
+                 <h3 class="text-lg text-center font-bold text-gray-400 mb-4">LOOP_SYNTH_UI</h3>
+                <p class="text-center text-gray-300 mb-8">Users, or "Fusion Architects," design experiences by chaining modular action loops. This transforms storytelling into a structured, repeatable, and gamified ritual.</p>
+                <div class="flex flex-col space-y-4">
+                    <div class="flowchart-node"><strong>1. COGNITIVE LOOP</strong><br>(Reflect_Analyze)</div>
+                    <div class="flex justify-center text-2xl text-gray-500">&darr;</div>
+                    <div class="flowchart-node"><strong>2. MECHANICAL LOOP</strong><br>(Build_Construct)</div>
+                    <div class="flex justify-center text-2xl text-gray-500">&darr;</div>
+                    <div class="flowchart-node"><strong>3. SYSTEMIC LOOP</strong><br>(Record_Canonize)</div>
+                </div>
+            </div>
+
+            <div class="card rounded-lg shadow-2xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 text-center">Generated Fusion Outcomes</h2>
+                <h3 class="text-lg text-center font-bold text-gray-400 mb-4">Live Fusion Dice Roller</h3>
+                <p class="text-center text-gray-300 mb-6">The system can generate novel combinations algorithmically. This bubble chart shows potential fusions, where position indicates the balance of logic vs. creativity, and size represents relative power.</p>
+                <div class="chart-container h-96 md:h-[400px]">
+                    <canvas id="fusionOutcomesChart"></canvas>
+                </div>
+            </div>
+        </main>
+
+        <footer class="text-center mt-12 md:mt-20 py-8 border-t border-gray-700">
+             <p class="text-gray-400">This infographic was generated by analyzing the ::META_MYTH_4LL:: system architecture.</p>
+             <p class="text-sm text-gray-500 mt-2">Visualization powered by Chart.js and Tailwind CSS. No SVG or Mermaid.js were used in this output.</p>
+        </footer>
+
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const palette = {
+        red: '#FF4E50',
+        orange: '#FC913A',
+        yellow: '#F9D423',
+        lightGreenYellow: '#EDE574',
+        lightGreen: '#E1F5C4',
+        background: 'rgba(255, 255, 255, 0.1)',
+        grid: 'rgba(255, 255, 255, 0.2)',
+        text: '#E1F5C4'
+    };
+    
+    const chartColors = [palette.red, palette.orange, palette.yellow, palette.lightGreenYellow, palette.lightGreen];
+
+    function wrapLabel(str, max_width) {
+        const words = str.split(' ');
+        let lines = [];
+        let current_line = words[0];
+
+        for (let i = 1; i < words.length; i++) {
+            if (current_line.length + words[i].length + 1 < max_width) {
+                current_line += ' ' + words[i];
+            } else {
+                lines.push(current_line);
+                current_line = words[i];
+            }
+        }
+        lines.push(current_line);
+        return lines;
+    }
+
+    const tooltipTitleCallback = (tooltipItems) => {
+        const item = tooltipItems[0];
+        let label = item.chart.data.labels[item.dataIndex];
+        return Array.isArray(label) ? label.join(' ') : label;
+    };
+    
+    const defaultOptions = {
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: palette.text,
+                    font: { size: 14, family: "'Roboto Mono', monospace" }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    title: tooltipTitleCallback
+                },
+                backgroundColor: '#1a202c',
+                titleColor: palette.yellow,
+                bodyColor: palette.lightGreen,
+                borderColor: palette.grid,
+                borderWidth: 1
+            }
+        }
+    };
+    
+    new Chart(document.getElementById('fusionEngineChart'), {
+        type: 'radar',
+        data: {
+            labels: ['FUS+ (Synergy)', 'ABS+ (Consumption)', 'ASC+ (Self-Realization)', 'SYM+ (Co-dependence)', 'POS+ (Override)', 'MUT+ (Instability)'],
+            datasets: [{
+                label: 'Protocol Signature',
+                data: [9, 7, 8, 5, 4, 6],
+                backgroundColor: 'rgba(255, 78, 80, 0.4)',
+                borderColor: palette.red,
+                pointBackgroundColor: palette.red,
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: palette.red
+            }]
+        },
+        options: { ...defaultOptions,
+            scales: {
+                r: {
+                    angleLines: { color: palette.grid },
+                    grid: { color: palette.grid },
+                    pointLabels: {
+                        color: palette.text,
+                        font: { size: 12, family: "'Roboto Mono', monospace" }
+                    },
+                    ticks: {
+                        color: palette.text,
+                        backdropColor: 'rgba(0, 0, 0, 0)',
+                        stepSize: 2
+                    }
+                }
+            },
+             plugins: {
+                legend: { display: false },
+                tooltip: defaultOptions.plugins.tooltip
+            }
+        }
+    });
+
+    new Chart(document.getElementById('povPantheonChart'), {
+        type: 'polarArea',
+        data: {
+            labels: [
+                wrapLabel('David (The Mirror Seer)', 16),
+                wrapLabel('Jessica (The Guardian)', 16),
+                wrapLabel('Daniel (The Critic-Saint)', 16),
+                wrapLabel('Rob (The Analyst)', 16),
+                wrapLabel('Chris (The Aesthete)', 16)
+            ],
+            datasets: [{
+                label: 'Influence Score',
+                data: [10, 8, 7, 9, 8],
+                backgroundColor: chartColors,
+                borderColor: palette.background,
+                borderWidth: 2
+            }]
+        },
+        options: { ...defaultOptions,
+             scales: {
+                r: {
+                    grid: { color: palette.grid },
+                    ticks: {
+                        display: false,
+                    }
+                }
+            },
+             plugins: {
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        color: palette.text,
+                        font: { size: 12, family: "'Roboto Mono', monospace" },
+                        boxWidth: 20
+                    }
+                },
+                tooltip: defaultOptions.plugins.tooltip
+            }
+        }
+    });
+
+    new Chart(document.getElementById('ingestChart'), {
+        type: 'bar',
+        data: {
+            labels: ['New Gods Ingest'],
+            datasets: [
+                {
+                    label: 'Core Themes',
+                    data: [40],
+                    backgroundColor: palette.red,
+                },
+                {
+                    label: 'Systemic Functions',
+                    data: [35],
+                    backgroundColor: palette.orange,
+                },
+                {
+                    label: 'Aesthetic Motifs',
+                    data: [15],
+                    backgroundColor: palette.yellow,
+                },
+                 {
+                    label: 'Cross-Universal Links',
+                    data: [10],
+                    backgroundColor: palette.lightGreenYellow,
+                }
+            ]
+        },
+        options: { ...defaultOptions,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    stacked: true,
+                    grid: { color: palette.grid, drawOnChartArea: false },
+                    ticks: { color: palette.text, callback: (value) => value + '%' }
+                },
+                y: {
+                    stacked: true,
+                    grid: { display: false },
+                    ticks: { color: palette.text }
+                }
+            },
+             plugins: {
+                legend: {
+                    position: 'top',
+                     labels: {
+                        color: palette.text,
+                        font: { size: 12, family: "'Roboto Mono', monospace" }
+                    }
+                },
+                tooltip: { ...defaultOptions.plugins.tooltip,
+                   callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.x !== null) {
+                                label += context.parsed.x + '%';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    new Chart(document.getElementById('fusionOutcomesChart'), {
+        type: 'bubble',
+        data: {
+            datasets: [{
+                label: 'FUS+ (Nikermes)',
+                data: [{x: 8, y: 7, r: 25}],
+                backgroundColor: 'rgba(255, 78, 80, 0.7)',
+                borderColor: palette.red,
+            }, {
+                label: 'MUT+ (Forced Fusion)',
+                data: [{x: 2, y: 3, r: 20}],
+                backgroundColor: 'rgba(252, 145, 58, 0.7)',
+                borderColor: palette.orange,
+            }, {
+                label: 'ASC+ (Perfect Cell)',
+                data: [{x: 4, y: 9, r: 30}],
+                backgroundColor: 'rgba(249, 212, 35, 0.7)',
+                borderColor: palette.yellow,
+            }, {
+                label: 'SYM+ (Venom)',
+                data: [{x: 6, y: 5, r: 18}],
+                backgroundColor: 'rgba(237, 229, 116, 0.7)',
+                borderColor: palette.lightGreenYellow,
+            }]
+        },
+        options: { ...defaultOptions,
+            scales: {
+                x: {
+                    title: { display: true, text: 'Creativity Axis', color: palette.text },
+                    grid: { color: palette.grid },
+                    ticks: { color: palette.text }
+                },
+                y: {
+                    title: { display: true, text: 'Logic Axis', color: palette.text },
+                    grid: { color: palette.grid },
+                    ticks: { color: palette.text }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { ...defaultOptions.plugins.tooltip,
+                    callbacks: {
+                         label: function(context) {
+                            return context.dataset.label + ': (Power ' + context.raw.r + ')';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>
+
