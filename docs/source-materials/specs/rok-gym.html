@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legion Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --theme-red: #C70039;
+            --theme-black: #000000;
+            --theme-white: #FFFFFF;
+            --theme-gray: #888888;
+        }
+        body {
+            background-color: var(--theme-white);
+            color: var(--theme-black);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        .pixel-border {
+            border: 4px solid var(--theme-black);
+            box-shadow: 0 0 0 4px var(--theme-white), 0 0 0 8px var(--theme-black);
+            background-color: var(--theme-white);
+        }
+        .pixel-border-inner {
+            border: 2px solid var(--theme-black);
+        }
+        .nav-item {
+            color: var(--theme-black);
+            border: 2px solid transparent;
+            font-family: 'VT323', monospace;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .nav-item.active {
+            background-color: var(--theme-red);
+            color: var(--theme-white);
+            border-color: var(--theme-black);
+        }
+        .nav-item:hover:not(.active) {
+            background-color: #FDD;
+        }
+        .content-module {
+            display: none;
+            padding: 1rem;
+        }
+        .content-module.active {
+            display: block;
+            animation: scanlines 0.5s forwards;
+        }
+        @keyframes scanlines {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        #main-content {
+            animation: crt-brightness-flicker 6s infinite;
+        }
+        @keyframes crt-brightness-flicker {
+            0%, 96%, 100% { opacity: 1; }
+            96.5% { opacity: 0.92; }
+            97% { opacity: 0.95; }
+        }
+        .terminal-card {
+            border: 2px solid var(--theme-black);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .ai-button {
+            background-color: var(--theme-red);
+            color: var(--theme-white);
+            font-family: 'Press Start 2P', cursive;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--theme-black);
+            cursor: pointer;
+        }
+        .ai-button:hover {
+            background-color: var(--theme-black);
+            color: var(--theme-red);
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            border: 2px solid var(--theme-black);
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+        }
+        @media (max-width: 640px) {
+            body { font-size: 14px; }
+            .nav-item { padding: 0.25rem 0.5rem; }
+            #bg-canvas { display: none; }
+            .pixel-border { box-shadow: none; border: 2px solid var(--theme-black); }
+        }
+    </style>
+</head>
+<body class="starfield">
+    <canvas id="bg-canvas" aria-hidden="true"></canvas>
+    <div class="flex flex-col max-w-5xl mx-auto pixel-border">
+        <nav id="main-nav" class="p-2 border-b-4 border-black sm:border-r-4 sm:w-48">
+            <h1 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive; font-size: 1.5rem; display: none sm:block;">COMMAND</h1>
+            <div class="flex flex-row sm:flex-col gap-2">
+                <button class="nav-item active" data-target="dashboard">DASHBOARD</button>
+                <button class="nav-item" data-target="strategy-forge">STRATEGY FORGE</button>
+                <button class="nav-item" data-target="intel-map">INTEL MAP</button>
+                <button class="nav-item" data-target="training-sim">TRAINING SIM</button>
+                <button class="nav-item" data-target="field-manual">FIELD MANUAL</button>
+            </div>
+        </nav>
+        <main id="main-content" class="p-4" style="max-height: 85vh; overflow-y: auto;" aria-live="polite">
+            <section id="dashboard" class="content-module active">
+                <h2 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive; font-size: 2rem;">SYSTEM ONLINE</h2>
+                <p>Welcome, Commander. This is your hub for a digital fitness empire.</p>
+            </section>
+            <section id="strategy-forge" class="content-module">
+                <h2 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive; font-size: 2rem;">STRATEGY FORGE</h2>
+                <div id="terminal-hub" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <div class="terminal-card" data-terminal="foundation">
+                        <h3 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive;">HERO CLASS</h3>
+                        <p>Define your core warrior archetype.</p>
+                    </div>
+                    <div class="terminal-card" data-terminal="monetization">
+                        <h3 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive;">LOOT TABLE</h3>
+                        <p>Define your initial offerings.</p>
+                    </div>
+                </div>
+                <div id="terminal-content"></div>
+            </section>
+            <section id="intel-map" class="content-module">
+                <h2 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive; font-size: 2rem;">INTEL MAP</h2>
+                <p>Visual intelligence on key models.</p>
+            </section>
+            <section id="training-sim" class="content-module">
+                <h2 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive; font-size: 2rem;">TRAINING SIMULATOR</h2>
+                <p>Test your strategic knowledge.</p>
+            </section>
+            <section id="field-manual" class="content-module">
+                <h2 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive; font-size: 2rem;">FIELD MANUAL</h2>
+                <p>Access strategic reports.</p>
+            </section>
+        </main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Background Canvas ---
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                function resizeCanvas() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                const stars = Array(50).fill().map(() => ({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 0.2 + 0.1
+                }));
+                function drawStars() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#C70039';
+                    stars.forEach(star => {
+                        ctx.fillRect(star.x, star.y, star.size, star.size);
+                        star.y += star.speed;
+                        if (star.y > canvas.height) star.y = 0;
+                    });
+                    requestAnimationFrame(drawStars);
+                }
+                drawStars();
+            }
+
+            // --- Sound Effects ---
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            function playBeep() {
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.1);
+            }
+
+            // --- Navigation ---
+            const navItems = document.querySelectorAll('.nav-item');
+            const contentModules = document.querySelectorAll('.content-module');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    if (item.classList.contains('active')) return;
+                    navItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    contentModules.forEach(module => {
+                        module.classList.remove('active');
+                        if (module.id === item.dataset.target) module.classList.add('active');
+                    });
+                    playBeep();
+                });
+            });
+
+            // --- Terminal Hub ---
+            const terminalCards = document.querySelectorAll('.terminal-card');
+            const terminalContent = document.getElementById('terminal-content');
+            const terminalTemplates = {
+                foundation: `
+                    <div class="terminal-card">
+                        <h3 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive;">HERO CLASS</h3>
+                        <p>Define your hero.</p>
+                        <textarea id="foundation-input" rows="3" placeholder="e.g., High-stress tech worker..."></textarea>
+                        <button class="ai-button" id="foundation-query">QUERY ORACLE</button>
+                        <div id="foundation-results" class="mt-2"></div>
+                    </div>
+                `,
+                monetization: `
+                    <div class="terminal-card">
+                        <h3 style="color: var(--theme-red); font-family: 'Press Start 2P', cursive;">LOOT TABLE</h3>
+                        <p>Define your offerings.</p>
+                        <textarea id="monetization-input" rows="3" placeholder="e.g., Free Relic: PDF guide..."></textarea>
+                        <button class="ai-button" id="monetization-query">QUERY ORACLE</button>
+                        <div id="monetization-results" class="mt-2"></div>
+                    </div>
+                `
+            };
+            terminalCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    terminalContent.innerHTML = terminalTemplates[card.dataset.terminal];
+                    document.querySelectorAll('.ai-button').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const inputId = btn.id.replace('-query', '-input');
+                            const resultId = btn.id.replace('-query', '-results');
+                            const input = document.getElementById(inputId).value;
+                            if (!input) {
+                                document.getElementById(resultId).innerHTML = '<p style="color: var(--theme-red);">INPUT REQUIRED.</p>';
+                                return;
+                            }
+                            document.getElementById(resultId).innerHTML = '<p>Loading...</p>';
+                            setTimeout(() => {
+                                document.getElementById(resultId).innerHTML = `
+                                    <p>Result for: ${input}</p>
+                                    <p>Output: Strategic plan generated!</p>
+                                `;
+                                playBeep();
+                            }, 1000); // Mock API
+                        });
+                    });
+                    playBeep();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
