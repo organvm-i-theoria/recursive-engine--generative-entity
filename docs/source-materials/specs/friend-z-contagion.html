@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Sphere Simulator v2.7 (Layout Fix)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --z-bg: -1;
+            --z-influence-zones: 1;
+            --z-nodes: 10;
+            --z-selected-node: 20;
+            --z-panel: 90;
+            --z-panel-toggle: 95;
+            --z-messagebox: 100;
+            --z-modal-backdrop: 110;
+            --z-modal-content: 120;
+            --z-friend-menu: 130;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            background-color: #0f172a;
+            touch-action: manipulation;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        #particle-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: var(--z-bg);
+        }
+        .glass-panel {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        @supports ((-webkit-backdrop-filter: blur(20px)) or (backdrop-filter: blur(20px))) {
+            .glass-panel {
+                background-color: rgba(255, 255, 255, 0.5);
+                -webkit-backdrop-filter: blur(20px);
+                backdrop-filter: blur(20px);
+            }
+        }
+        .node { 
+            position: absolute; 
+            transform: translate(-50%, -50%); 
+            transition: transform 0.3s ease, background-color 0.5s ease, width 0.3s ease, height 0.3s ease, left 0.3s ease, top 0.3s ease, box-shadow 0.3s ease; 
+            z-index: var(--z-nodes);
+            cursor: pointer;
+        }
+        .node.is-selected {
+            transform: translate(-50%, -50%) scale(1.15);
+            box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.7);
+            z-index: var(--z-selected-node);
+        }
+        .node.is-user { cursor: default; }
+        .node-line { 
+            position: absolute; height: 3px; transform-origin: left center; z-index: var(--z-nodes); border-radius: 3px; transition: all 0.3s ease;
+        }
+        .message-box { transition: opacity 0.3s ease, transform 0.3s ease; z-index: var(--z-messagebox); }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spinner { display: inline-block; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; width: 16px; height: 16px; animation: spin 0.8s linear infinite; }
+        
+        #app-container { display: flex; width: 100%; height: 100%; }
+        #main-view { flex-grow: 1; height: 100%; position: relative; }
+        #control-panel {
+            width: 100%; max-width: 24rem; height: 100%; position: fixed;
+            top: 0; right: 0; z-index: var(--z-panel);
+            transform: translateX(100%); transition: transform 0.4s ease-in-out; will-change: transform;
+        }
+        @media (min-width: 1024px) {
+            #control-panel { position: relative; transform: translateX(0); }
+            #app-wrapper.panel-collapsed #control-panel { transform: translateX(100%); }
+        }
+        #app-wrapper.panel-open #control-panel { transform: translateX(0); }
+        #panel-toggle-btn {
+            position: fixed; top: 1rem; right: 1rem; z-index: var(--z-panel-toggle);
+        }
+        .modal { z-index: var(--z-modal-content); }
+        .modal-backdrop { z-index: var(--z-modal-backdrop); }
+
+        .influence-zone {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            transform: translate(-50%, -50%);
+            z-index: var(--z-influence-zones);
+            pointer-events: none;
+        }
+
+        .friend-menu-dropdown {
+            position: absolute;
+            right: 0;
+            top: 2.5rem;
+            z-index: var(--z-friend-menu);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: top right;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-800 antialiased">
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div id="app-wrapper">
+        <div id="app-container">
+            <main id="main-view">
+                <div id="network-canvas" class="w-full h-full touch-none"></div>
+                <div class="absolute top-4 left-4 glass-panel p-4 rounded-2xl shadow-lg">
+                    <h1 class="text-lg font-bold text-slate-900">Social Sphere Simulator</h1>
+                    <p class="text-sm text-slate-700">v2.7 (Layout Fix)</p>
+                </div>
+                <div id="auth-status" class="absolute bottom-4 left-4 glass-panel p-2 px-3 rounded-2xl shadow-lg text-xs">
+                    <p id="user-id-display" class="font-mono text-slate-700"></p>
+                </div>
+                <div id="message-box" class="message-box hidden fixed bottom-4 right-4 lg:bottom-auto lg:top-4 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 bg-slate-900 text-white p-4 rounded-lg shadow-lg max-w-sm">
+                    <p id="message-text"></p>
+                </div>
+            </main>
+
+            <aside id="control-panel" class="glass-panel p-6 flex flex-col shadow-lg lg:border-l lg:border-white/20 overflow-y-auto">
+                <div class="flex items-center justify-between flex-shrink-0">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 mb-1">Control Panel</h2>
+                        <p class="text-sm text-slate-700">Shape your social sphere.</p>
+                    </div>
+                    <button id="close-panel-btn" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/30 hover:bg-white/50 transition">×</button>
+                </div>
+                <div class="mt-6 mb-6 p-4 bg-white/50 rounded-2xl flex-shrink-0">
+                    <h3 class="font-bold text-slate-800 mb-2">Your Calculated Average</h3>
+                    <div id="user-average-display" class="space-y-2 text-sm"></div>
+                </div>
+                <div class="flex-grow flex flex-col min-h-0">
+                    <h3 class="font-bold text-slate-800 mb-2 flex-shrink-0">Inner Circle (Max 5)</h3>
+                    <div id="friend-list-container" class="friend-list space-y-3"></div>
+                </div>
+                <div class="mt-6 flex-shrink-0 space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="add-friend-btn" class="w-full bg-slate-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-slate-900 transition-colors shadow-md disabled:bg-slate-400 disabled:cursor-not-allowed">Add Manually</button>
+                        <button id="add-persona-btn" class="w-full bg-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors shadow-md disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center justify-center">✨ Generate Persona</button>
+                    </div>
+                </div>
+                <div class="mt-auto pt-6 border-t border-white/20 flex-shrink-0">
+                    <h3 class="font-bold text-slate-800 mb-4">Advanced Actions</h3>
+                    <div class="space-y-3">
+                        <button id="trigger-event-btn" class="w-full bg-slate-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-slate-800 transition-colors flex items-center justify-center">✨ Trigger Event</button>
+                        <button id="get-analysis-btn" class="w-full bg-slate-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-slate-800 transition-colors flex items-center justify-center">✨ Get Group Analysis</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <button id="panel-toggle-btn" class="w-12 h-12 bg-slate-800/80 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-slate-900 transition-all backdrop-blur-sm">
+        <svg id="toggle-icon-closed" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <div id="modal-backdrop" class="modal-backdrop hidden fixed inset-0 bg-black/30"></div>
+
+    <div id="add-friend-modal" class="modal hidden fixed inset-0 flex items-center justify-center p-4"><div class="glass-panel rounded-2xl shadow-2xl w-full max-w-md p-8"><h2 class="text-2xl font-bold mb-2 text-slate-900">Add Friend Manually</h2><p class="text-slate-700 mb-6">Enter your friend's details and traits.</p><form id="add-friend-form"><div class="mb-4"><label for="friend-name" class="block text-sm font-medium text-slate-800 mb-1">Name</label><input type="text" id="friend-name" name="name" required class="w-full bg-white/50 border-white/30 rounded-lg text-slate-900 placeholder-slate-600 p-2"></div><div id="trait-sliders-container" class="space-y-3 mb-6"></div><div class="flex justify-end space-x-3"><button type="button" class="cancel-modal-btn bg-white/60 text-slate-800 font-semibold py-2 px-4 rounded-lg">Cancel</button><button type="submit" class="bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg w-32">Add Friend</button></div></form></div></div>
+    <div id="edit-friend-modal" class="modal hidden fixed inset-0 flex items-center justify-center p-4"><div class="glass-panel rounded-2xl shadow-2xl w-full max-w-md p-8"><h2 class="text-2xl font-bold mb-2 text-slate-900">Edit Friend</h2><p class="text-slate-700 mb-6">Update your friend's details.</p><form id="edit-friend-form"><div class="mb-4"><label for="edit-friend-name" class="block text-sm font-medium text-slate-800 mb-1">Name</label><input type="text" id="edit-friend-name" name="name" required class="w-full bg-white/50 border-white/30 rounded-lg text-slate-900 placeholder-slate-600 p-2"></div><div id="edit-trait-sliders-container" class="space-y-3 mb-6"></div><div class="flex justify-end space-x-3"><button type="button" class="cancel-modal-btn bg-white/60 text-slate-800 font-semibold py-2 px-4 rounded-lg">Cancel</button><button type="submit" class="bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg w-32">Save Changes</button></div></form></div></div>
+    <div id="trait-history-modal" class="modal hidden fixed inset-0 flex items-center justify-center p-4"><div class="glass-panel rounded-2xl shadow-2xl w-full max-w-2xl p-8"><h2 id="trait-history-title" class="text-2xl font-bold mb-2 flex items-center text-slate-900">Trait History</h2><div class="mt-4"><canvas id="trait-history-chart" height="200"></canvas></div><div class="mt-6 flex justify-end"><button type="button" class="cancel-modal-btn bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg">Close</button></div></div></div>
+    <div id="persona-modal" class="modal hidden fixed inset-0 flex items-center justify-center p-4"><div class="glass-panel rounded-2xl shadow-2xl w-full max-w-md p-8"><h2 class="text-2xl font-bold mb-2 flex items-center text-slate-900">✨ Generate Persona</h2><p class="text-slate-700 mb-6">Describe a friend, or use a preset.</p><form id="persona-form"><label for="persona-textarea" class="block text-sm font-medium text-slate-800 mb-1">Describe your friend</label><textarea id="persona-textarea" class="w-full h-24 bg-white/50 border-white/30 rounded-lg text-slate-900 placeholder-slate-600 p-2" placeholder="e.g. 'A creative, optimistic person who loves hiking.'"></textarea><div class="mt-4 flex justify-between items-center"><button type="button" id="persona-preset-btn" class="bg-white/60 text-slate-800 font-semibold py-2 px-4 rounded-lg">Use Preset</button><div class="flex space-x-3"><button type="button" class="cancel-modal-btn bg-white/60 text-slate-800 font-semibold py-2 px-4 rounded-lg">Cancel</button><button type="submit" id="submit-persona" class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg w-32">Generate</button></div></div></form></div></div>
+    <div id="event-modal" class="modal hidden fixed inset-0 flex items-center justify-center p-4"><div class="glass-panel rounded-2xl shadow-2xl w-full max-w-md p-8"><h2 class="text-2xl font-bold mb-2 flex items-center text-slate-900">✨ Trigger Event</h2><p class="text-slate-700 mb-6">Describe a life event, or use a preset.</p><form id="event-form"><textarea id="event-textarea" class="w-full h-24 bg-white/50 border-white/30 rounded-lg text-slate-900 placeholder-slate-600 p-2" placeholder="e.g. 'We started a new club together.'"></textarea><div class="mt-4 flex justify-between items-center"><button type="button" id="event-preset-btn" class="bg-white/60 text-slate-800 font-semibold py-2 px-4 rounded-lg">Use Preset</button><div class="flex space-x-3"><button type="button" class="cancel-modal-btn bg-white/60 text-slate-800 font-semibold py-2 px-4 rounded-lg">Cancel</button><button type="submit" id="submit-event" class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg w-32">Trigger</button></div></div></form></div></div>
+    <div id="analysis-modal" class="modal hidden fixed inset-0 flex items-center justify-center p-4"><div class="glass-panel rounded-2xl shadow-2xl w-full max-w-lg p-8"><h2 class="text-2xl font-bold mb-2 flex items-center text-slate-900">✨ Group Analysis</h2><div id="analysis-content" class="analysis-content mt-4 text-slate-800 max-h-[60vh] overflow-y-auto"></div><div class="mt-6 flex justify-end"><button type="button" class="cancel-modal-btn bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg">Close</button></div></div></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const ParticleSystem = {
+            canvas: null, ctx: null, particles: [], animationFrameId: null, baseColor: [15, 23, 42],
+            init() { this.canvas = document.getElementById('particle-canvas'); this.ctx = this.canvas.getContext('2d'); this.resizeCanvas(); window.addEventListener('resize', () => this.resizeCanvas()); this.animate(); },
+            resizeCanvas() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; this.createParticles(); },
+            createParticles() { const pC = Math.floor(this.canvas.width*this.canvas.height/25000); this.particles = []; for(let i=0; i<pC; i++) { this.particles.push({x:Math.random()*this.canvas.width, y:Math.random()*this.canvas.height, vx:(Math.random()-.5)*.5, vy:(Math.random()-.5)*.5, radius:Math.random()*1.5+1}); } },
+            updateColor(c) { this.baseColor = c; },
+            animate() { this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); const [r,g,b]=this.baseColor; const pC=`rgba(${r+100},${g+100},${b+100},.8)`; const lC=`rgba(${r+100},${g+100},${b+100},.2)`; for(let i=0; i<this.particles.length; i++) { const p=this.particles[i]; p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>this.canvas.width) p.vx*=-1; if(p.y<0||p.y>this.canvas.height) p.vy*=-1; this.ctx.beginPath(); this.ctx.arc(p.x,p.y,p.radius,0,Math.PI*2); this.ctx.fillStyle=pC; this.ctx.fill(); for(let j=i+1; j<this.particles.length; j++) { const p2=this.particles[j]; const d=Math.sqrt((p.x-p2.x)**2+(p.y-p2.y)**2); if(d<150) { this.ctx.beginPath(); this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.strokeStyle=lC; this.ctx.lineWidth=1-(d/150); this.ctx.stroke(); } } } this.animationFrameId=requestAnimationFrame(() => this.animate()); }
+        };
+
+        const App = {
+            config: {
+                MAX_FRIENDS: 5, MESSAGE_DURATION: 4000, EVENT_DURATION: 5000,
+                TRAITS: { Optimism: { color: [34, 197, 94] }, Ambition: { color: [59, 130, 246] }, Creativity: { color: [168, 85, 247] }, Health: { color: [234, 179, 8] } },
+                PERSONA_PRESETS: ["An old friend from college who is always optimistic.", "A quiet, creative type I met at a coffee shop.", "My gym buddy. Super focused on health and fitness."],
+                EVENT_PRESETS: ["We all started a new book club together.", "A stressful week at work for everyone.", "We went on a weekend hiking trip."]
+            },
+            state: { 
+                nodes: [], lines: [], messageTimeout: null, bgColor: [15, 23, 42],
+                selectedNodeId: null, personaPresetIndex: 0, eventPresetIndex: 0,
+                activeModal: null, isAuthReady: false, userId: null, db: null, auth: null,
+                unsubscribe: null, traitChart: null, openMenuId: null
+            },
+            dom: {},
+
+            async init() {
+                this.cacheDom();
+                this.bindEvents();
+                ParticleSystem.init();
+                await this.firebase.init();
+            },
+
+            cacheDom() {
+                this.dom = {
+                    appWrapper: document.getElementById('app-wrapper'),
+                    networkCanvas: document.getElementById('network-canvas'),
+                    friendListContainer: document.getElementById('friend-list-container'),
+                    userAverageDisplay: document.getElementById('user-average-display'),
+                    messageBox: document.getElementById('message-box'),
+                    messageText: document.getElementById('message-text'),
+                    userIdDisplay: document.getElementById('user-id-display'),
+                    panelToggleBtn: document.getElementById('panel-toggle-btn'),
+                    closePanelBtn: document.getElementById('close-panel-btn'),
+                    modalBackdrop: document.getElementById('modal-backdrop'),
+                    addFriendBtn: document.getElementById('add-friend-btn'),
+                    addPersonaBtn: document.getElementById('add-persona-btn'),
+                    triggerEventBtn: document.getElementById('trigger-event-btn'),
+                    getAnalysisBtn: document.getElementById('get-analysis-btn'),
+                    addFriendModal: document.getElementById('add-friend-modal'),
+                    addFriendForm: document.getElementById('add-friend-form'),
+                    editFriendModal: document.getElementById('edit-friend-modal'),
+                    editFriendForm: document.getElementById('edit-friend-form'),
+                    editFriendName: document.getElementById('edit-friend-name'),
+                    editTraitSlidersContainer: document.getElementById('edit-trait-sliders-container'),
+                    traitHistoryModal: document.getElementById('trait-history-modal'),
+                    traitHistoryTitle: document.getElementById('trait-history-title'),
+                    traitHistoryChart: document.getElementById('trait-history-chart').getContext('2d'),
+                    personaModal: document.getElementById('persona-modal'),
+                    personaForm: document.getElementById('persona-form'),
+                    personaTextarea: document.getElementById('persona-textarea'),
+                    personaPresetBtn: document.getElementById('persona-preset-btn'),
+                    submitPersonaBtn: document.getElementById('submit-persona'),
+                    eventModal: document.getElementById('event-modal'),
+                    eventForm: document.getElementById('event-form'),
+                    eventTextarea: document.getElementById('event-textarea'),
+                    eventPresetBtn: document.getElementById('event-preset-btn'),
+                    submitEventBtn: document.getElementById('submit-event'),
+                    analysisModal: document.getElementById('analysis-modal'),
+                    analysisContent: document.getElementById('analysis-content'),
+                };
+            },
+            
+            bindEvents() {
+                this.dom.panelToggleBtn.addEventListener('click', () => this.view.togglePanel(true));
+                this.dom.closePanelBtn.addEventListener('click', () => this.view.togglePanel(false));
+                this.dom.networkCanvas.addEventListener('click', (e) => this.events.handleCanvasClick(e));
+                
+                this.dom.modalBackdrop.addEventListener('click', () => this.helpers.closeModal());
+                document.querySelectorAll('.cancel-modal-btn').forEach(btn => btn.addEventListener('click', () => this.helpers.closeModal()));
+                
+                this.dom.addFriendBtn.addEventListener('click', () => this.helpers.openModal(this.dom.addFriendModal));
+                this.dom.addPersonaBtn.addEventListener('click', () => this.helpers.openModal(this.dom.personaModal));
+                this.dom.triggerEventBtn.addEventListener('click', () => this.helpers.openModal(this.dom.eventModal));
+                this.dom.getAnalysisBtn.addEventListener('click', () => { this.logic.getAnalysis(); this.helpers.openModal(this.dom.analysisModal); });
+                
+                this.dom.addFriendForm.addEventListener('submit', (e) => { e.preventDefault(); this.logic.addFriendManually(); });
+                this.dom.editFriendForm.addEventListener('submit', (e) => { e.preventDefault(); this.logic.saveEditedFriend(); });
+                this.dom.personaForm.addEventListener('submit', (e) => { e.preventDefault(); this.logic.generatePersona(); });
+                this.dom.eventForm.addEventListener('submit', (e) => { e.preventDefault(); this.logic.triggerEvent(); });
+                
+                this.dom.personaPresetBtn.addEventListener('click', () => { this.dom.personaTextarea.value = this.config.PERSONA_PRESETS[this.state.personaPresetIndex]; this.state.personaPresetIndex = (this.state.personaPresetIndex + 1) % this.config.PERSONA_PRESETS.length; });
+                this.dom.eventPresetBtn.addEventListener('click', () => { this.dom.eventTextarea.value = this.config.EVENT_PRESETS[this.state.eventPresetIndex]; this.state.eventPresetIndex = (this.state.eventPresetIndex + 1) % this.config.EVENT_PRESETS.length; });
+                
+                this.dom.friendListContainer.addEventListener('click', (e) => {
+                    const target = e.target;
+                    const menuButton = target.closest('.friend-menu-btn');
+                    const actionButton = target.closest('.friend-action-btn');
+
+                    if (menuButton) {
+                        const id = menuButton.dataset.id;
+                        this.view.toggleFriendMenu(id);
+                        e.stopPropagation();
+                    } else if (actionButton) {
+                        const id = actionButton.dataset.id;
+                        const action = actionButton.dataset.action;
+                        if (action === 'edit') this.logic.openEditFriendModal(id);
+                        if (action === 'history') this.view.showTraitHistory(id);
+                        if (action === 'remove') this.logic.removeFriend(id);
+                        this.view.toggleFriendMenu(null);
+                    }
+                });
+
+                document.body.addEventListener('click', () => this.view.toggleFriendMenu(null));
+                window.addEventListener('resize', this.helpers.throttle(() => { this.view.render(); ParticleSystem.resizeCanvas(); }, 100));
+                document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (this.state.selectedNodeId) { this.state.selectedNodeId = null; this.view.render(); } else if (this.state.activeModal) { this.helpers.closeModal(); } } if (e.key === 'Tab' && this.state.activeModal) this.helpers.trapFocus(e); });
+            },
+
+            firebase: {
+                async init() {
+                    try {
+                        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+                            apiKey: "your-api-key",
+                            authDomain: "your-auth-domain",
+                            projectId: "your-project-id",
+                            storageBucket: "your-storage-bucket",
+                            messagingSenderId: "your-sender-id",
+                            appId: "your-app-id"
+                        };
+                        const app = initializeApp(firebaseConfig);
+                        App.state.db = getFirestore(app);
+                        App.state.auth = getAuth(app);
+                        onAuthStateChanged(App.state.auth, async user => {
+                            if (user) {
+                                App.state.userId = user.uid;
+                                App.state.isAuthReady = true;
+                                App.dom.userIdDisplay.textContent = `ID: ${user.uid.substring(0, 8)}...`;
+                                this.loadData();
+                            } else {
+                                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(App.state.auth, __initial_auth_token);
+                                else await signInAnonymously(App.state.auth);
+                            }
+                        });
+                    } catch (error) {
+                        console.error("Firebase init failed:", error);
+                        App.helpers.showMessage("Database connection failed. Running in local mode.", 10000);
+                        App.logic.setupLocalMode();
+                    }
+                },
+                loadData() {
+                    if (App.state.unsubscribe) App.state.unsubscribe();
+                    const docRef = doc(App.state.db, `artifacts/${typeof __app_id !== 'undefined' ? __app_id : 'default'}/users`, App.state.userId);
+                    App.state.unsubscribe = onSnapshot(docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            const nodes = (data.nodes || []).map(node => {
+                                if (typeof node.traitHistory === 'string') node.traitHistory = JSON.parse(node.traitHistory);
+                                return node;
+                            });
+                            App.state.nodes = nodes;
+                        } else {
+                            App.state.nodes = [{ id: 'user', name: 'You', isUser: true, traits: {}, x: 50, y: 50 }];
+                        }
+                        App.view.render(); // Render immediately after data load
+                    });
+                },
+                async saveData() {
+                    if (!App.state.isAuthReady || !App.state.userId) return;
+                    const nodesToSave = App.state.nodes.map(node => {
+                        const newNode = {...node};
+                        if (newNode.traitHistory) newNode.traitHistory = JSON.stringify(newNode.traitHistory);
+                        return newNode;
+                    });
+                    const docRef = doc(App.state.db, `artifacts/${typeof __app_id !== 'undefined' ? __app_id : 'default'}/users`, App.state.userId);
+                    await setDoc(docRef, { nodes: nodesToSave });
+                },
+            },
+
+            events: {
+                handleCanvasClick(e) {
+                    const pos = App.helpers.getEventPos(e);
+                    const canvasRect = App.dom.networkCanvas.getBoundingClientRect();
+                    const clickX = pos.x - canvasRect.left;
+                    const clickY = pos.y - canvasRect.top;
+                    const clickedNode = App.helpers.getFriends().find(node => {
+                        const nodeSize = 64 + ((node.influence || 1) - 1) * 32;
+                        const radius = nodeSize / 2;
+                        const nodeCenterX = node.x / 100 * canvasRect.width;
+                        const nodeCenterY = node.y / 100 * canvasRect.height;
+                        const distance = Math.sqrt(Math.pow(clickX - nodeCenterX, 2) + Math.pow(clickY - nodeCenterY, 2));
+                        return distance <= radius;
+                    });
+                    if (App.state.selectedNodeId) {
+                        const nodeToMove = App.state.nodes.find(n => n.id === App.state.selectedNodeId);
+                        if (clickedNode && clickedNode.id === App.state.selectedNodeId) { App.state.selectedNodeId = null; } 
+                        else if (clickedNode) { App.state.selectedNodeId = clickedNode.id; } 
+                        else if (nodeToMove) {
+                            nodeToMove.x = Math.max(0, Math.min(100, (clickX / canvasRect.width) * 100));
+                            nodeToMove.y = Math.max(0, Math.min(100, (clickY / canvasRect.height) * 100));
+                            App.state.selectedNodeId = null;
+                            App.logic.calculateUserAverage(); App.firebase.saveData();
+                        }
+                    } else if (clickedNode) {
+                        App.state.selectedNodeId = clickedNode.id;
+                        App.helpers.showMessage(`Selected ${clickedNode.name}. Tap a new location to move them.`);
+                    }
+                    App.view.render();
+                }
+            },
+
+            logic: {
+                setupLocalMode() { App.helpers.showMessage("Running in local mode. Data will not be saved.", 10000); App.state.nodes = [{ id: 'user', name: 'You', isUser: true, traits: {}, x: 50, y: 50 }]; App.view.render(); },
+                pushTraitHistory(friend) { if (!friend.traitHistory) friend.traitHistory = []; const snapshot = { time: Date.now() }; Object.keys(App.config.TRAITS).forEach(trait => { snapshot[trait] = friend.traits[trait]; }); friend.traitHistory.push(snapshot); },
+                openEditFriendModal(id) { const friend = App.state.nodes.find(n => n.id === id); if (!friend) return; App.state.editingFriendId = id; App.dom.editFriendName.value = friend.name; App.view.populateTraitSliders(friend, App.dom.editTraitSlidersContainer, 'edit'); App.helpers.openModal(App.dom.editFriendModal); },
+                saveEditedFriend() { const id = App.state.editingFriendId; const friend = App.state.nodes.find(n => n.id === id); if (!friend) return; const form = App.dom.editFriendForm; friend.name = form.elements.name.value.trim(); Object.keys(App.config.TRAITS).forEach(trait => { friend.traits[trait] = parseFloat(form.elements[trait.toLowerCase()].value); }); friend.influence = parseFloat(form.elements.influence.value); this.pushTraitHistory(friend); App.helpers.closeModal(); App.logic.calculateUserAverage(); App.view.render(); App.firebase.saveData(); App.helpers.showMessage(`${friend.name}'s details updated.`); },
+                addFriendManually() { if (App.helpers.getFriends().length >= App.config.MAX_FRIENDS) { App.helpers.showMessage("Maximum friend limit reached."); return; } const form = App.dom.addFriendForm; const name = form.elements.name.value.trim(); if (!name) { App.helpers.showMessage("Please enter a name."); return; } const newFriend = this.createFriendObject(name, form); if (newFriend) { App.state.nodes.push(newFriend); this.pushTraitHistory(newFriend); App.helpers.closeModal(); App.logic.calculateUserAverage(); App.view.render(); App.firebase.saveData(); App.helpers.showMessage(`${name} has been added.`); } },
+                createFriendObject(name, form) {
+                    const canvasRect = App.dom.networkCanvas.getBoundingClientRect();
+                    if (canvasRect.width === 0) {
+                        App.helpers.showMessage("Canvas not ready, please try again.", 3000);
+                        return null;
+                    }
+                    const userNode = App.helpers.getUserNode();
+                    const angle = Math.random() * 2 * Math.PI;
+                    const radius = Math.min(canvasRect.width, canvasRect.height) * 0.35;
+                    const x = 50 + (radius / canvasRect.width * 100) * Math.cos(angle);
+                    const y = 50 + (radius / canvasRect.height * 100) * Math.sin(angle);
+                    const newFriend = {
+                        id: `friend-${Date.now()}`, name: name, traits: {},
+                        influence: form ? parseFloat(form.elements.influence.value) : 1.0,
+                        isUser: false,
+                        x: Math.max(15, Math.min(85, x)),
+                        y: Math.max(15, Math.min(85, y)),
+                    };
+                    Object.keys(App.config.TRAITS).forEach(trait => { newFriend.traits[trait] = form ? parseFloat(form.elements[trait.toLowerCase()].value) : 5; });
+                    return newFriend;
+                },
+                removeFriend(id) { const friend = App.state.nodes.find(n => n.id === id); if (friend) { App.state.nodes = App.state.nodes.filter(n => n.id !== id); App.logic.calculateUserAverage(); App.view.render(); App.firebase.saveData(); App.helpers.showMessage(`${friend.name} has been removed.`); } },
+                async generatePersona() { const description = App.dom.personaTextarea.value; if (!description || App.helpers.getFriends().length >= App.config.MAX_FRIENDS) { App.helpers.showMessage("Provide a description and ensure space in your circle."); return; } const btn = App.dom.submitPersonaBtn; App.helpers.setLoading(btn, true); const prompt = `You are a personality analyst. Based on: "${description}", generate a JSON object for a person. Include a realistic name (string), traits (object with Optimism, Ambition, Creativity, Health as numbers from 1 to 10), and influence (number from 0.5 to 2.0). Respond ONLY with valid JSON.`; try { const result = JSON.parse(await App.helpers.callGemini(prompt)); if (!result.name || !result.traits || result.influence === undefined) throw new Error("Invalid response format."); const newFriend = this.createFriendObject(result.name, null); if (newFriend) { App.state.nodes.push(newFriend); this.pushTraitHistory(newFriend); App.helpers.closeModal(); App.logic.calculateUserAverage(); App.view.render(); App.firebase.saveData(); App.helpers.showMessage(`✨ ${result.name} generated and added.`); } } catch (error) { App.helpers.showMessage(`Generation failed: ${error.message}`, 5000); } finally { App.helpers.setLoading(btn, false); } },
+                async triggerEvent() { const description = App.dom.eventTextarea.value; const friends = App.helpers.getFriends(); if (!description || friends.length === 0) { App.helpers.showMessage("Provide an event and have at least one friend."); return; } const btn = App.dom.submitEventBtn; App.helpers.setLoading(btn, true); const friendsData = friends.map(f => ({ name: f.name, traits: f.traits })); const prompt = `A life event occurs: "${description}". For these people: ${JSON.stringify(friendsData)}, predict temporary trait changes. Respond ONLY with a JSON object mapping names to trait changes, e.g., {"Alex":{"Optimism":-1,"Health":2}}.`; try { const changes = JSON.parse(await App.helpers.callGemini(prompt)); const originalStates = {}; friends.forEach(f => { if (changes[f.name]) { originalStates[f.id] = JSON.parse(JSON.stringify(f.traits)); const nodeEl = App.dom.networkCanvas.querySelector(`[data-id="${f.id}"]`); let mainTraitChanged, maxChange = 0; Object.keys(changes[f.name]).forEach(trait => { if (f.traits[trait] !== undefined) { const changeValue = changes[f.name][trait]; f.traits[trait] = Math.max(1, Math.min(10, f.traits[trait] + changeValue)); if (Math.abs(changeValue) > Math.abs(maxChange)) { maxChange = changeValue; mainTraitChanged = trait; } } }); this.pushTraitHistory(f); if(nodeEl && mainTraitChanged){ const color = App.config.TRAITS[mainTraitChanged].color; nodeEl.classList.add('animate-trait-change'); nodeEl.style.backgroundColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8)`; } } }); App.helpers.closeModal(); App.logic.calculateUserAverage(); App.view.render(); App.firebase.saveData(); App.helpers.showMessage("✨ Event triggered! See the temporary effects."); setTimeout(() => { friends.forEach(f => { if(originalStates[f.id]) f.traits = originalStates[f.id]; const nodeEl = App.dom.networkCanvas.querySelector(`[data-id="${f.id}"]`); if (nodeEl) { nodeEl.classList.remove('animate-trait-change'); nodeEl.style.backgroundColor = ''; } }); App.logic.calculateUserAverage(); App.view.render(); App.firebase.saveData(); App.helpers.showMessage("Event effects have worn off."); }, App.config.EVENT_DURATION); } catch (error) { App.helpers.showMessage(`Event failed: ${error.message}`, 5000); } finally { App.helpers.setLoading(btn, false); } },
+                async getAnalysis() { const friends = App.helpers.getFriends(); if (friends.length === 0) { App.helpers.showMessage("Add at least one friend for analysis."); return; } const btn = App.dom.getAnalysisBtn; App.helpers.setLoading(btn, true); App.dom.analysisContent.innerHTML = '<div class="flex justify-center p-8"><div class="spinner !border-slate-800 !border-t-transparent"></div></div>'; const friendsData = friends.map(f => ({ name: f.name, traits: f.traits, influence: f.influence })); const prompt = `You are a social dynamics coach. Analyze this inner circle: ${JSON.stringify(friendsData)}. Provide a concise analysis on: 1. **Group Strengths**, 2. **Potential Weaknesses/Blind Spots**, and 3. **Actionable Advice**. Format using Markdown.`; try { const resultText = await App.helpers.callGemini(prompt); App.dom.analysisContent.innerHTML = `<div class="prose prose-slate">${resultText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>`; } catch (error) { App.dom.analysisContent.innerHTML = `<p class="text-red-500">Analysis failed: ${error.message}</p>`; } finally { App.helpers.setLoading(btn, false); } },
+                calculateUserAverage() { const friends = App.helpers.getFriends(); const userNode = App.helpers.getUserNode(); if (!userNode) return; const baseColor = [15, 23, 42]; if (friends.length === 0) { userNode.traits = {}; App.state.bgColor = baseColor; ParticleSystem.updateColor(baseColor); return; } const weightedTotals = {}; const totalInfluence = friends.reduce((sum, f) => sum + f.influence, 0); let avgColor = [0, 0, 0]; Object.keys(App.config.TRAITS).forEach(t => weightedTotals[t] = 0); friends.forEach(f => { const influenceRatio = f.influence / totalInfluence; Object.entries(App.config.TRAITS).forEach(([t, config]) => { const traitValue = f.traits[t] || 0; weightedTotals[t] += traitValue * f.influence; avgColor[0] += config.color[0] * traitValue/10 * influenceRatio; avgColor[1] += config.color[1] * traitValue/10 * influenceRatio; avgColor[2] += config.color[2] * traitValue/10 * influenceRatio; }); }); Object.keys(App.config.TRAITS).forEach(t => { userNode.traits[t] = totalInfluence > 0 ? weightedTotals[t] / totalInfluence : 0; }); App.state.bgColor = [ Math.round(baseColor[0] * 0.6 + avgColor[0] * 0.4), Math.round(baseColor[1] * 0.6 + avgColor[1] * 0.4), Math.round(baseColor[2] * 0.6 + avgColor[2] * 0.4), ]; ParticleSystem.updateColor(App.state.bgColor); },
+            },
+
+            view: {
+                togglePanel(forceOpen) { App.dom.appWrapper.classList.toggle('panel-open', forceOpen); },
+                render() { if (!App.state.isAuthReady && !App.state.userId) return; this.generateLines(); const canvas = App.dom.networkCanvas; canvas.innerHTML = ''; this.renderInfluenceZones(); App.state.lines.forEach(l => canvas.appendChild(this.renderLine(l))); App.state.nodes.forEach(n => canvas.appendChild(this.renderNode(n))); this.renderFriendList(); this.renderUserAverage(); const friendCount = App.helpers.getFriends().length; App.dom.addFriendBtn.disabled = friendCount >= App.config.MAX_FRIENDS; App.dom.addPersonaBtn.disabled = friendCount >= App.config.MAX_FRIENDS; },
+                renderNode(node) { const el = document.createElement('div'); el.dataset.id = node.id; let size, textClass, ringClass, bgColor; if (node.isUser) { [size, textClass, ringClass, bgColor] = [112, 'text-lg', 'ring-4 ring-white/50', 'bg-white/80 is-user']; } else { size = 64 + ((node.influence || 1) - 1) * 32; [textClass, ringClass, bgColor] = ['text-base', 'ring-2 ring-white/30', 'bg-white/70']; } const isSelected = node.id === App.state.selectedNodeId; el.className = `node ${bgColor} ${isSelected ? 'is-selected' : ''} rounded-full flex flex-col items-center justify-center shadow-xl ${ringClass}`; el.style.cssText = `width:${size}px; height:${size}px; left:${node.x}%; top:${node.y}%;`; const nameSpan = document.createElement('span'); nameSpan.className = `${textClass} font-bold text-slate-900`; nameSpan.textContent = node.name; el.appendChild(nameSpan); return el; },
+                renderLine(line) { const fromNode = App.state.nodes.find(n => n.id === line.from), toNode = App.state.nodes.find(n => n.id === line.to); if (!fromNode || !toNode) return document.createElement('div'); const el = document.createElement('div'), rect = App.dom.networkCanvas.getBoundingClientRect(); const fromX = fromNode.x / 100 * rect.width, fromY = fromNode.y / 100 * rect.height; const toX = toNode.x / 100 * rect.width, toY = toNode.y / 100 * rect.height; const length = Math.sqrt((toX - fromX) ** 2 + (toY - fromY) ** 2), angle = Math.atan2(toY - fromY, toX - fromX) * (180 / Math.PI); el.className = `node-line`; const [r,g,b] = ParticleSystem.baseColor; el.style.background = `rgba(${r+100}, ${g+100}, ${b+100}, 0.5)`; el.style.boxShadow = `0 0 10px rgba(${r+100}, ${g+100}, ${b+100}, 0.5)`; el.style.cssText += `width:${length}px; left:${fromX}px; top:${fromY}px; transform:rotate(${angle}deg);`; return el; },
+                renderFriendList() { const cont = App.dom.friendListContainer, friends = App.helpers.getFriends(); cont.innerHTML = ''; if (friends.length === 0) { cont.innerHTML = '<p class="text-slate-700 text-sm mt-2">Your inner circle is empty.</p>'; return; } friends.forEach(f => { const card = document.createElement('div'); card.className = 'p-3 bg-white/40 rounded-xl relative animate-slide-in'; const traitHTML = Object.keys(App.config.TRAITS).map(t => `<div class="flex items-center text-xs"><div class="w-2 h-2 rounded-full" style="background-color:rgb(${App.config.TRAITS[t].color.join(',')})"></div><span class="font-medium text-slate-700 ml-1.5">${t.slice(0,3)}:</span><span class="font-bold text-slate-900 ml-1">${Math.round(f.traits[t] || 0)}</span></div>`).join(''); const menuOpen = App.state.openMenuId === f.id; card.innerHTML = `<div class="flex items-center justify-between"><p class="font-bold text-slate-900">${f.name}</p><span class="text-xs font-bold bg-white/50 text-slate-800 px-2 py-0.5 rounded-full">${(f.influence || 1.0).toFixed(1)}x Inf.</span></div><div class="grid grid-cols-2 gap-x-3 gap-y-1 mt-1.5">${traitHTML}</div><div class="absolute top-2 right-2"><button data-id="${f.id}" class="friend-menu-btn w-8 h-8 rounded-full bg-white/30 text-slate-700 hover:bg-white/50 flex items-center justify-center transition">⋮</button><div class="friend-menu-dropdown ${menuOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'} w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"><div class="py-1" role="menu" aria-orientation="vertical"><button data-id="${f.id}" data-action="edit" class="friend-action-btn text-left w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" aria-label="Edit friend">Edit</button><button data-id="${f.id}" data-action="history" class="friend-action-btn text-left w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" aria-label="View history">History</button><button data-id="${f.id}" data-action="remove" class="friend-action-btn text-left w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50" aria-label="Remove friend">Remove</button></div></div></div>`; cont.appendChild(card); }); },
+                renderUserAverage() { const userNode = App.helpers.getUserNode(), disp = App.dom.userAverageDisplay; if (!userNode || Object.keys(userNode.traits).length === 0) { disp.innerHTML = '<p class="text-slate-700">Add friends to see your calculated average.</p>'; return; } disp.innerHTML = Object.keys(App.config.TRAITS).map(t => `<div class="flex justify-between items-center"><span class="font-semibold text-slate-800">${t}</span><span class="font-bold text-lg text-slate-900">${(userNode.traits[t] || 0).toFixed(1)}</span></div>`).join(''); },
+                generateLines() { App.state.lines = []; const userNode = App.helpers.getUserNode(); if (!userNode) return; App.helpers.getFriends().forEach(friend => App.state.lines.push({ from: userNode.id, to: friend.id })); },
+                populateTraitSliders(friend, container, prefix) { container.innerHTML = ''; const traitsAndInfluence = {...App.config.TRAITS, Influence: {}}; Object.keys(traitsAndInfluence).forEach(key => { const isInfluence = key === 'Influence'; const wrapper = document.createElement('div'); const label = document.createElement('label'); label.htmlFor = `${prefix}-slider-${key}`; label.className = 'flex justify-between text-sm font-medium text-slate-800 mb-1'; const valueSpan = document.createElement('span'); let value = friend ? (isInfluence ? (friend.influence || 1.0) : (friend.traits[key] || 5)) : (isInfluence ? '1.0' : '5'); valueSpan.textContent = isInfluence ? parseFloat(value).toFixed(1) : value; label.innerHTML = `${key} <span>${valueSpan.textContent}</span>`; const slider = document.createElement('input'); slider.type = 'range'; slider.id = `${prefix}-slider-${key}`; slider.name = key.toLowerCase(); slider.min = isInfluence ? '0.5' : '1'; slider.max = isInfluence ? '2.0' : '10'; slider.step = isInfluence ? '0.1' : '1'; slider.value = value; slider.className = 'w-full h-2 bg-white/50 rounded-lg appearance-none cursor-pointer'; slider.oninput = () => { label.querySelector('span').textContent = isInfluence ? parseFloat(slider.value).toFixed(1) : slider.value; }; wrapper.appendChild(label); wrapper.appendChild(slider); container.appendChild(wrapper); }); },
+                showTraitHistory(id) { const friend = App.state.nodes.find(n => n.id === id); if (!friend || !friend.traitHistory || friend.traitHistory.length === 0) { App.helpers.showMessage("No history available for this friend yet."); return; } App.dom.traitHistoryTitle.textContent = `Trait History: ${friend.name}`; this.renderTraitChart(friend); App.helpers.openModal(App.dom.traitHistoryModal); },
+                renderTraitChart(friend) { const history = friend.traitHistory.slice(-20); const labels = history.map(h => new Date(h.time).toLocaleTimeString()); const datasets = Object.keys(App.config.TRAITS).map(trait => ({ label: trait, data: history.map(h => h[trait]), borderColor: `rgb(${App.config.TRAITS[trait].color.join(',')})`, backgroundColor: `rgba(${App.config.TRAITS[trait].color.join(',')}, 0.1)`, fill: false, tension: 0.2 })); if (App.state.traitChart) App.state.traitChart.destroy(); App.state.traitChart = new Chart(App.dom.traitHistoryChart, { type: 'line', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } } }); },
+                toggleFriendMenu(id) { if (App.state.openMenuId === id) { App.state.openMenuId = null; } else { App.state.openMenuId = id; } this.renderFriendList(); },
+                renderInfluenceZones() { const userNode = App.helpers.getUserNode(); if (!userNode) return; const canvas = App.dom.networkCanvas; const baseRadius = Math.min(canvas.clientWidth, canvas.clientHeight) * 0.15; const zoneRadii = [baseRadius, baseRadius * 2, baseRadius * 3]; zoneRadii.forEach(radius => { let zone = canvas.querySelector(`.influence-zone[data-radius="${radius}"]`); if (!zone) { zone = document.createElement('div'); zone.className = 'influence-zone'; zone.dataset.radius = radius; canvas.appendChild(zone); } zone.style.left = `${userNode.x}%`; zone.style.top = `${userNode.y}%`; zone.style.width = `${radius * 2}px`; zone.style.height = `${radius * 2}px`; }); },
+            },
+
+            helpers: {
+                openModal(modal) { this.closeModal(); App.dom.modalBackdrop.classList.remove('hidden'); modal.classList.remove('hidden'); App.state.activeModal = modal; const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'); if (focusable.length) focusable[0].focus(); },
+                closeModal() { if (App.state.activeModal) { App.dom.modalBackdrop.classList.add('hidden'); App.state.activeModal.classList.add('hidden'); App.state.activeModal = null; } },
+                trapFocus(e) { const modal = App.state.activeModal; const focusable = Array.from(modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.disabled); const first = focusable[0]; const last = focusable[focusable.length - 1]; if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); } else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); } },
+                async callGemini(prompt) { const apiKey = "your-gemini-api-key"; // Replace with a valid API key
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        throw new Error(errorBody.error?.message || "API request failed");
+                    }
+                    const result = await response.json();
+                    if (result.candidates?.[0]?.content?.parts?.[0]) {
+                        return result.candidates[0].content.parts[0].text;
+                    } else {
+                        throw new Error("Invalid response structure from API.");
+                    }
+                },
+                getEventPos(e) { if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY }; return { x: e.clientX, y: e.clientY }; },
+                throttle(func, wait) { let timeout; return function(...args) { if (!timeout) { timeout = setTimeout(() => { func.apply(this, args); timeout = null; }, wait); } }; },
+                showMessage(text, duration) { const dur = duration || App.config.MESSAGE_DURATION; const { messageBox, messageText } = App.dom; if (!messageBox || !messageText) return; messageText.textContent = text; messageBox.classList.remove('hidden'); clearTimeout(App.state.messageTimeout); App.state.messageTimeout = setTimeout(() => { messageBox.classList.add('hidden'); }, dur); },
+                setLoading(button, isLoading) { if (isLoading) { button.disabled = true; button.dataset.originalText = button.innerHTML; button.innerHTML = '<div class="spinner"></div>'; } else { button.disabled = false; button.innerHTML = button.dataset.originalText || 'Submit'; } },
+                getFriends: () => App.state.nodes.filter(n => !n.isUser),
+                getUserNode: () => App.state.nodes.find(n => n.isUser),
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => { App.init(); });
+    </script>
+</body>
+</html>
