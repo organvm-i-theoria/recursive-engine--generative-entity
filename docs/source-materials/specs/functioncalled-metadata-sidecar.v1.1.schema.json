@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "title": "FUNCTIONcalled Metadata Sidecar",
+  "description": "Standardized metadata schema for FUNCTIONcalled() naming convention sidecar files.",
+  "type": "object",
+  "properties": {
+    "conformsTo": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Standards this file conforms to (e.g., schema.org, Dublin Core)."
+    },
+    "schema:type": {
+      "type": "string",
+      "description": "Type of resource (e.g., SoftwareSourceCode, CreativeWork, Dataset)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Literal filename of the resource."
+    },
+    "dc:subject": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Keywords or subjects, Dublin Core convention."
+    },
+    "programmingLanguage": {
+      "type": "string",
+      "description": "Programming language, if applicable."
+    },
+    "license": {
+      "type": "string",
+      "description": "License identifier (SPDX)."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?(?:\\+[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?$",
+      "description": "Semantic Versioning (SemVer) string."
+    },
+    "inLanguage": {
+      "type": "string",
+      "pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z]{2})?$",
+      "description": "Language code (BCP-47)."
+    },
+    "encodingFormat": {
+      "type": "string",
+      "description": "IANA MIME type."
+    },
+    "identifier": {
+      "type": "string",
+      "description": "Unique identifier (UUID, ULID, or URI)."
+    },
+    "creator": {
+      "type": "string",
+      "description": "Primary creator of the resource."
+    },
+    "contributor": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Additional contributors."
+    },
+    "dateCreated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp (ISO 8601)."
+    },
+    "dateModified": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last modification timestamp (ISO 8601)."
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "light",
+        "full"
+      ]
+    }
+  },
+  "required": [
+    "identifier",
+    "name",
+    "profile",
+    "schema:type",
+    "version"
+  ],
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "profile": {
+            "const": "light"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "profile",
+          "name",
+          "identifier",
+          "version"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "profile": {
+            "const": "full"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "profile",
+          "name",
+          "identifier",
+          "version",
+          "schema:type",
+          "conformsTo",
+          "encodingFormat",
+          "dateCreated",
+          "dateModified"
+        ]
+      }
+    }
+  ]
+}
