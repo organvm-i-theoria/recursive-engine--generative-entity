@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>MythOS Engine v2.0: Anthony James Padavano</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #e2e8f0;
+            --primary-color: #f59e0b;
+            --secondary-color: #38bdf8;
+            --accent-color: #818cf8;
+            --defined-sacral: #ef4444;
+            --defined-spleen: #f59e0b;
+            --defined-solar-plexus: #8b5cf6;
+            --defined-root: #a16207;
+            --defined-throat: #3b82f6;
+            --undefined-color: #404040;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .glass-pane {
+            background: rgba(23, 23, 23, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #bodygraph-container {
+            touch-action: none; /* Important for custom touch handling */
+            overflow: hidden;
+            cursor: grab;
+        }
+        #bodygraph-container:active {
+            cursor: grabbing;
+        }
+
+        .body-graph-svg .center.defined-center {
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        .body-graph-svg .center:hover, .body-graph-svg .channel:hover {
+            filter: drop-shadow(0 0 10px var(--primary-color));
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .body-graph-svg .channel.defined {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw-channel 2s ease-in-out forwards;
+        }
+        
+        @keyframes draw-channel { to { stroke-dashoffset: 0; } }
+
+        .modal { animation: fadeIn 0.3s ease-out; }
+        .modal-content { animation: slideUp 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .timeline-item::before { content: ''; position: absolute; left: 11px; top: 12px; bottom: 0; width: 2px; background-color: #404040; z-index: -1; }
+        .timeline-item:last-child::before { display: none; }
+
+        .house-diagram {
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #4a5568;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background: #1a202c;
+        }
+        .house-level {
+            flex-grow: 1;
+            padding: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            border-bottom: 2px solid #4a5568;
+            text-align: center;
+        }
+        .house-level:last-child { border-bottom: none; }
+        .house-level:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: scale(1.03);
+        }
+
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .gemini-button { background: linear-gradient(45deg, var(--secondary-color), var(--accent-color)); transition: all 0.3s ease; }
+        .gemini-button:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--accent-color); }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="app" class="min-h-screen p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold font-orbitron text-transparent bg-clip-text bg-gradient-to-r from-primary-color to-secondary-color">MythOS Engine</h1>
+            <p class="text-slate-400 mt-2">A Generative Guide for Anthony James Padavano</p>
+            <p class="text-xs text-slate-500">MG 3/2 | Emotional Authority | RAX of Tension</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- BodyGraph Explorer -->
+                <section class="glass-pane rounded-2xl p-4 sm:p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-xl font-bold font-orbitron">BodyGraph Explorer</h2>
+                        <span class="text-xs text-slate-500 hidden md:block">Pinch to zoom, drag to pan</span>
+                    </div>
+                    <div id="bodygraph-container" class="w-full h-[500px] rounded-lg bg-black/20">
+                        <!-- SVG will be injected here -->
+                    </div>
+                </section>
+
+                <!-- House of the Self -->
+                <section class="glass-pane rounded-2xl p-4 sm:p-6">
+                    <h2 class="text-xl font-bold mb-4 font-orbitron text-center">The House of the Self</h2>
+                    <div id="house-container" class="w-full max-w-sm mx-auto">
+                        <!-- House diagram will be injected here -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-8">
+                <!-- Daily Oracle -->
+                <section class="glass-pane rounded-2xl p-4 sm:p-6">
+                    <h2 class="text-xl font-bold mb-4 font-orbitron">✨ Daily Oracle</h2>
+                    <div id="oracle-content" class="min-h-[100px] flex items-center justify-center text-center"></div>
+                </section>
+
+                <!-- Daily Rhythm Engine -->
+                <section class="glass-pane rounded-2xl p-4 sm:p-6">
+                    <h2 class="text-xl font-bold mb-4 font-orbitron">Daily Rhythm Engine</h2>
+                    <div id="timeline-container" class="relative"></div>
+                </section>
+
+                <!-- Architect's Council -->
+                <section class="glass-pane rounded-2xl p-4 sm:p-6">
+                    <h2 class="text-xl font-bold mb-4 font-orbitron">✨ Architect's Council</h2>
+                    <div id="prompt-container" class="text-center">
+                        <button id="summon-architect-btn" class="gemini-button text-white font-bold py-3 px-6 rounded-lg shadow-lg">Summon an Architect</button>
+                        <div id="prompt-display" class="mt-4 p-4 bg-black/20 rounded-lg min-h-[150px] flex items-center justify-center">
+                            <p class="text-slate-300 italic">Click the button to receive a generative prompt.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+        <div id="modal-content" class="modal-content glass-pane rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4 font-orbitron text-primary-color"></h3>
+            <div id="modal-body" class="space-y-4 text-slate-300"></div>
+            <div id="gemini-insight-container" class="mt-6">
+                 <button id="gemini-insight-btn" class="gemini-button w-full text-white font-bold py-2 px-4 rounded-lg">✨ Ask the Oracle for more insight</button>
+                 <div id="gemini-insight-response" class="mt-4 p-4 bg-black/20 rounded-lg hidden"></div>
+            </div>
+            <button id="modal-close" class="mt-6 w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg">Close</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA STORE ---
+            const humanDesignData = {
+                summary: "Manifesting Generator 3/2, Emotional Authority, Right Angle Cross of Tension.",
+                centers: {
+                    head: { name: "Head", defined: false, description: "Center for inspiration, questions, and pressure to think. When undefined, you are open to inspiration from many sources but not designed to be certain." },
+                    ajna: { name: "Ajna", defined: false, description: "Center for conceptualization and processing ideas. When undefined, you have a flexible mind and can see multiple perspectives." },
+                    throat: { name: "Throat", defined: true, description: "Center for manifestation, communication, and action. When defined, you have a consistent way of expressing yourself and bringing things into form." },
+                    g: { name: "G Center", defined: false, description: "Center for identity, love, and direction. When undefined, you find your identity and direction through your environment and relationships." },
+                    ego: { name: "Ego", defined: false, description: "Center for willpower, ego, and the material world. When undefined, you are not here to prove your worth and can be wise about value." },
+                    sacral: { name: "Sacral", defined: true, description: "The powerhouse of life force, sexuality, and sustained work. As a defined Sacral, you have consistent energy to respond to what lights you up." },
+                    spleen: { name: "Spleen", defined: true, description: "Center for intuition, health, and survival instincts. When defined, you have a reliable 'in-the-moment' intuition and a strong immune system." },
+                    solarPlexus: { name: "Emotional Solar Plexus", defined: true, description: "Center for emotions, feelings, and desire. As your Emotional Authority, clarity comes over time, not in the moment. Ride the wave." },
+                    root: { name: "Root", defined: true, description: "Center for pressure, drive, and adrenaline. When defined, you have a consistent way of handling pressure and stress." }
+                },
+                channels: {
+                    '34-20': { name: "Channel of Charisma", description: "Connects the Sacral to the Throat. Provides raw, motor-to-voice power for magnetism in motion. Archetype: The Channeler / Creative Lightning Rod.", gates: [34, 20] },
+                    '42-53': { name: "Channel of Maturation", description: "Connects the Sacral to the Root. Enables growth through completing full, cyclical experiences. Archetype: The Initiated Builder.", gates: [42, 53] },
+                    '59-6': { name: "Channel of Mating / Intimacy", description: "Connects the Sacral to the Solar Plexus. Fosters emotional intimacy and fertile creativity. Archetype: The Bondmaker / Seed Carrier.", gates: [59, 6] },
+                    '3-60': { name: "Channel of Mutation", description: "Connects the Sacral to the Root. Brings new life and order out of chaos and energetic pulses. Archetype: The Mutator / Evolutionary Architect.", gates: [3, 60] }
+                },
+                dailyRhythm: [
+                    { start: 6.5, end: 8, name: "Hermit Download" }, { start: 8, end: 9.5, name: "First Fire" }, { start: 9.5, end: 11.5, name: "Creative Expansion I" }, { start: 11.5, end: 13, name: "Integration Buffer" }, { start: 13, end: 15, name: "Tinker + Test" }, { start: 15, end: 18, name: "Resonant Peak" }, { start: 18, end: 19.5, name: "Social Spark" }, { start: 19.5, end: 21, name: "Cooldown / Archive" }, { start: 21, end: 24, name: "Emotional Digest + Reset" }
+                ],
+                houseOfSelf: [
+                    { level: "Attic", components: "Higher Mind, Cosmic Blueprint", func: "Pluto, Neptune, North Node, Uranus", color: "var(--accent-color)" },
+                    { level: "Living Room", components: "Social Self, World Interface", func: "Personality Sun, Mercury, Venus, Earth", color: "var(--secondary-color)" },
+                    { level: "Kitchen", components: "Creative Fire, Energy Engine", func: "MG Type, Sacral, Emotional Wave", color: "var(--defined-sacral)" },
+                    { level: "Bedroom", components: "Inner Life, Restoration", func: "Moon, Design Venus, Hermit (2-line)", color: "var(--defined-spleen)" },
+                    { level: "Basement", components: "Shadow & Foundation", func: "South Node, Saturn, Mars, Design Moon", color: "var(--defined-root)" }
+                ],
+                architects: ["The Lorekeeper", "The Tension Bearer", "The Alchemical Engineer", "The Channeler", "The Hermit"]
+            };
+            const loaderHTML = `<div class="loader mx-auto"></div>`;
+
+            // --- GEMINI API CALLER ---
+            async function callGeminiAPI(prompt) {
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.8, topP: 0.95 } };
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API call failed: ${response.status}`);
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0) return result.candidates[0].content.parts[0].text;
+                    return "The oracle's response was empty.";
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    return "The oracle is resting. Please try again later.";
+                }
+            }
+            
+            // --- MODAL LOGIC ---
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalClose = document.getElementById('modal-close');
+            const geminiInsightBtn = document.getElementById('gemini-insight-btn');
+            const geminiInsightResponse = document.getElementById('gemini-insight-response');
+            let insightAbortController = null;
+
+            function showModal(title, content) {
+                modalTitle.textContent = title;
+                modalBody.innerHTML = content;
+                geminiInsightResponse.classList.add('hidden');
+                geminiInsightResponse.innerHTML = '';
+                geminiInsightBtn.disabled = false;
+                geminiInsightBtn.innerHTML = '✨ Ask the Oracle for more insight';
+                modal.classList.remove('hidden');
+
+                if (insightAbortController) insightAbortController.abort();
+                insightAbortController = new AbortController();
+                
+                geminiInsightBtn.addEventListener('click', async () => {
+                    geminiInsightBtn.disabled = true;
+                    geminiInsightBtn.innerHTML = `<div class="loader mx-auto" style="width:20px; height:20px;"></div>`;
+                    geminiInsightResponse.classList.remove('hidden');
+                    geminiInsightResponse.innerHTML = loaderHTML;
+                    const prompt = `I am a ${humanDesignData.summary}. In this context, give me a short, deep, and poetic insight about "${title}". Explain its core essence and a practical tip for me.`;
+                    const insight = await callGeminiAPI(prompt);
+                    geminiInsightResponse.innerHTML = insight.replace(/\n/g, '<br>');
+                }, { signal: insightAbortController.signal });
+            }
+            modalClose.addEventListener('click', () => modal.classList.add('hidden'));
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+
+            // --- PHASE 1: DYNAMIC BODYGRAPH ---
+            function setupPanAndZoom() {
+                const container = document.getElementById('bodygraph-container');
+                const svg = container.querySelector('svg');
+                if (!svg) return;
+
+                let pan = { x: 0, y: 0 };
+                let zoom = 1;
+                let isPinching = false;
+                let isPanning = false;
+                let startDist = 0;
+                let startPos = { x: 0, y: 0 };
+
+                const updateTransform = () => {
+                    svg.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
+                };
+
+                // Mouse/Desktop controls
+                container.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+                    zoom = Math.max(0.5, Math.min(5, zoom * zoomFactor));
+                    updateTransform();
+                });
+                container.addEventListener('mousedown', (e) => {
+                    isPanning = true;
+                    startPos = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+                });
+                container.addEventListener('mousemove', (e) => {
+                    if (isPanning) {
+                        pan.x = e.clientX - startPos.x;
+                        pan.y = e.clientY - startPos.y;
+                        updateTransform();
+                    }
+                });
+                container.addEventListener('mouseup', () => isPanning = false);
+                container.addEventListener('mouseleave', () => isPanning = false);
+
+                // Touch/Mobile controls
+                container.addEventListener('touchstart', (e) => {
+                    if (e.touches.length === 2) {
+                        isPinching = true;
+                        isPanning = false;
+                        startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                    } else if (e.touches.length === 1) {
+                        isPinching = false;
+                        isPanning = true;
+                        startPos = { x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y };
+                    }
+                });
+                container.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    if (isPinching && e.touches.length === 2) {
+                        const newDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                        const zoomFactor = newDist / startDist;
+                        zoom = Math.max(0.5, Math.min(5, zoom * zoomFactor));
+                        updateTransform();
+                    } else if (isPanning && e.touches.length === 1) {
+                        pan.x = e.touches[0].clientX - startPos.x;
+                        pan.y = e.touches[0].clientY - startPos.y;
+                        updateTransform();
+                    }
+                });
+                container.addEventListener('touchend', () => {
+                    isPinching = false;
+                    isPanning = false;
+                });
+                updateTransform();
+            }
+
+            function renderBodyGraph() {
+                const container = document.getElementById('bodygraph-container');
+                const { centers, channels } = humanDesignData;
+                const centerPositions = { head: { cx: 150, cy: 50 }, ajna: { cx: 150, cy: 110 }, throat: { cx: 150, cy: 190 }, g: { cx: 150, cy: 270 }, ego: { cx: 220, cy: 230 }, sacral: { cx: 150, cy: 350 }, spleen: { cx: 80, cy: 270 }, solarPlexus: { cx: 220, cy: 310 }, root: { cx: 150, cy: 430 } };
+                const channelPaths = { '34-20': { from: 'sacral', to: 'throat' }, '42-53': { from: 'sacral', to: 'root' }, '59-6': { from: 'sacral', to: 'solarPlexus' }, '3-60': { from: 'root', to: 'sacral' } };
+                
+                let svg = `<svg viewBox="0 0 300 500" class="body-graph-svg w-full h-full" style="transform-origin: center center;">`;
+                for (const id in channelPaths) {
+                    if (channels[id]) {
+                        const { from, to } = channelPaths[id];
+                        svg += `<line x1="${centerPositions[from].cx}" y1="${centerPositions[from].cy}" x2="${centerPositions[to].cx}" y2="${centerPositions[to].cy}" class="channel defined cursor-pointer" stroke-width="4" stroke="var(--primary-color)" data-id="${id}" />`;
+                    }
+                }
+                for (const id in centers) {
+                    const center = centers[id];
+                    const pos = centerPositions[id];
+                    const fill = center.defined ? `var(--defined-${id.toLowerCase().replace(/\s+/g, '-')})` : 'var(--undefined-color)';
+                    const definedClass = center.defined ? 'defined-center' : '';
+                    if (id === 'head' || id === 'ajna' || id === 'root') {
+                        const points = id === 'head' ? `${pos.cx},${pos.cy-25} ${pos.cx-30},${pos.cy+20} ${pos.cx+30},${pos.cy+20}` : `${pos.cx},${pos.cy+25} ${pos.cx-30},${pos.cy-20} ${pos.cx+30},${pos.cy-20}`;
+                        svg += `<polygon points="${points}" fill="${fill}" class="center ${definedClass} cursor-pointer" data-id="${id}"/>`;
+                    } else {
+                        svg += `<rect x="${pos.cx - 25}" y="${pos.cy - 25}" width="50" height="50" fill="${fill}" class="center ${definedClass} cursor-pointer" data-id="${id}"/>`;
+                    }
+                }
+                svg += `</svg>`;
+                container.innerHTML = svg;
+
+                container.querySelectorAll('.center, .channel').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const id = el.dataset.id;
+                        const data = centers[id] || channels[id];
+                        showModal(data.name, `<p>${data.description}</p>`);
+                    });
+                });
+                setupPanAndZoom();
+            }
+
+            // --- PHASE 1: VISUAL HOUSE OF SELF ---
+            function renderHouseOfSelf() {
+                const container = document.getElementById('house-container');
+                let html = `<div class="house-diagram">`;
+                html += humanDesignData.houseOfSelf.map(item => `
+                    <div class="house-level" style="border-top-color: ${item.color};" data-level="${item.level}">
+                        <h4 class="font-bold text-lg" style="color: ${item.color};">${item.level}</h4>
+                        <p class="text-sm text-slate-400">${item.components}</p>
+                    </div>
+                `).join('');
+                html += `</div>`;
+                container.innerHTML = html;
+
+                container.querySelectorAll('.house-level').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const levelName = el.dataset.level;
+                        const data = humanDesignData.houseOfSelf.find(l => l.level === levelName);
+                        showModal(`The ${data.level}`, `<p class="font-bold text-slate-300">${data.components}</p><p class="mt-2">${data.func}</p>`);
+                    });
+                });
+            }
+
+            // --- OTHER MODULES ---
+            async function getDailyOracle() {
+                const container = document.getElementById('oracle-content');
+                container.innerHTML = loaderHTML;
+                const now = new Date();
+                const currentTime = now.getHours() + now.getMinutes() / 60;
+                const currentBlock = humanDesignData.dailyRhythm.find(item => currentTime >= item.start && currentTime < item.end) || { name: "a moment of transition" };
+                const prompt = `I am a ${humanDesignData.summary}. My current energy phase is "${currentBlock.name}". Provide a short, poetic, and actionable oracle message for me for this specific moment.`;
+                const oracleMessage = await callGeminiAPI(prompt);
+                container.innerHTML = `<p class="text-slate-300 italic">"${oracleMessage.replace(/\n/g, '<br>')}"</p>`;
+            }
+
+            function renderDailyRhythm() {
+                const container = document.getElementById('timeline-container');
+                const now = new Date();
+                const currentTime = now.getHours() + now.getMinutes() / 60;
+                container.innerHTML = humanDesignData.dailyRhythm.map(item => {
+                    const isActive = currentTime >= item.start && currentTime < item.end;
+                    return `<div class="timeline-item relative pl-8 pb-6">
+                                <div class="absolute left-0 top-1 w-6 h-6 rounded-full border-4" style="border-color: ${isActive ? 'var(--primary-color)' : '#404040'}; background-color: var(--bg-color);"></div>
+                                <p class="font-bold ${isActive ? 'text-primary-color' : 'text-slate-400'}">${item.name}</p>
+                            </div>`;
+                }).join('');
+            }
+
+            function setupArchitectsCouncil() {
+                const summonBtn = document.getElementById('summon-architect-btn');
+                const promptP = document.querySelector('#prompt-display p');
+                summonBtn.addEventListener('click', async () => {
+                    summonBtn.disabled = true;
+                    promptP.parentElement.innerHTML = loaderHTML;
+                    const randomArchitect = humanDesignData.architects[Math.floor(Math.random() * humanDesignData.architects.length)];
+                    const prompt = `I am a ${humanDesignData.summary}. Act as a wise oracle embodying the archetype of "${randomArchitect}". Give me one profound, single-sentence question to reflect on today that is specific to my Human Design.`;
+                    const generatedPrompt = await callGeminiAPI(prompt);
+                    document.getElementById('prompt-display').innerHTML = `<p><span class="font-bold text-secondary-color block mb-2">${randomArchitect}:</span> <span class="italic">"${generatedPrompt}"</span></p>`;
+                    summonBtn.disabled = false;
+                });
+            }
+
+            // --- INITIALIZE APP ---
+            renderBodyGraph();
+            renderHouseOfSelf();
+            getDailyOracle();
+            renderDailyRhythm();
+            setupArchitectsCouncil();
+            setInterval(() => { getDailyOracle(); renderDailyRhythm(); }, 60000);
+        });
+    </script>
+</body>
+</html>
