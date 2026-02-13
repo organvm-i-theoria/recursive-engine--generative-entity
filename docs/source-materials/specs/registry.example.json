@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2025-08-18T20:29:38.539245Z",
+  "generator": "registry-builder.py",
+  "entries": [
+    {
+      "path": "interface/portal/entry.html",
+      "sidecar": "examples/example.light.interface.portal.entry.html.meta.json",
+      "name": "interface.portal.entry.html",
+      "identifier": "urn:uuid:11111111-1111-1111-1111-111111111111",
+      "profile": "light",
+      "version": "1.2.0",
+      "schema:type": "CreativeWork",
+      "encodingFormat": "text/html",
+      "inLanguage": "en-US",
+      "license": "MIT",
+      "hash": {
+        "algo": "sha256",
+        "value": "REPLACE_ME"
+      },
+      "size": 12345,
+      "dateCreated": "2025-08-18T12:00:00Z",
+      "dateModified": "2025-08-18T12:00:00Z"
+    },
+    {
+      "path": "logic/agent/analysis.py",
+      "sidecar": "examples/example.full.logic.agent.analysis.py.meta.json",
+      "name": "logic.agent.analysis.py",
+      "identifier": "urn:uuid:22222222-2222-2222-2222-222222222222",
+      "profile": "full",
+      "version": "0.4.1",
+      "schema:type": "SoftwareSourceCode",
+      "encodingFormat": "text/x-python",
+      "inLanguage": "en",
+      "license": "Apache-2.0",
+      "dc:subject": [
+        "narrative-inference",
+        "agent"
+      ],
+      "programmingLanguage": "Python",
+      "hash": {
+        "algo": "sha256",
+        "value": "REPLACE_ME"
+      },
+      "size": 6789,
+      "dateCreated": "2025-08-18T12:00:00Z",
+      "dateModified": "2025-08-18T12:00:00Z"
+    }
+  ]
+}
